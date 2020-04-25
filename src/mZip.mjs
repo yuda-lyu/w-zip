@@ -58,7 +58,7 @@ archiver.registerFormat('zip-encrypted', archiverEnc)
  *     console.log('unzip2', await wz.mZip.unzip(fpZip2, fpUnzipExtract + '/test2'))
  *     console.log('unzip2 after')
  *
- *     //unzip
+ *     //unzip with password
  *     console.log('unzip2 with password before')
  *     console.log('unzip2 with password', await wz.mZip.unzip(fpZip2PW, fpUnzipExtract + '/test2PW', { pw }))
  *     console.log('unzip2 with password after')

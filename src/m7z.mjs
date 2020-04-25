@@ -53,7 +53,7 @@ import execScript from 'wsemi/src/execScript.mjs'
  *     console.log('unzip2', await wz.m7z.unzip(fpZip2, fpUnzipExtract + '/test2'))
  *     console.log('unzip2 after')
  *
- *     //unzip
+ *     //unzip with password
  *     console.log('unzip2 with password before')
  *     console.log('unzip2 with password', await wz.m7z.unzip(fpZip2PW, fpUnzipExtract + '/test2PW', { pw }))
  *     console.log('unzip2 with password after')
