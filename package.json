@@ -1,0 +1,40 @@
+{
+  "name": "w-zip",
+  "version": "1.0.0",
+  "description": "A tool for compression.",
+  "main": "dist/w-zip.umd.js",
+  "dependencies": {
+    "archiver": "^4.0.1",
+    "archiver-zip-encrypted": "^1.0.8",
+    "extract-zip": "^2.0.0",
+    "unzipper": "^0.10.11",
+    "lodash": "^4.17.15",
+    "wsemi": "^1.4.8"
+  },
+  "devDependencies": {
+    "w-package-tools": "^1.0.25"
+  },
+  "scripts": {
+    "test": "./node_modules/.bin/mocha --require @babel/register",
+    "deploy": "gh-pages -d docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yuda-lyu/w-zip.git"
+  },
+  "keywords": [
+    "package",
+    "tool",
+    "compression",
+    "zip",
+    "adm-zip",
+    "7z",
+    "nodejs"
+  ],
+  "author": "yuda-lyu(semisphere)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yuda-lyu/w-zip/issues"
+  },
+  "homepage": "https://github.com/yuda-lyu/w-zip#readme"
+}
