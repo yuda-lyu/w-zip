@@ -1,4 +1,3 @@
-import path from 'path'
 import fs from 'fs'
 import get from 'lodash/get'
 import execScript from 'wsemi/src/execScript.mjs'
@@ -13,15 +12,15 @@ import execScript from 'wsemi/src/execScript.mjs'
  * import wz from 'w-zip'
  *
  * let fpSrc1 = './testData/input/file1(中文).txt'
- * let fpZip1 = './testData/output/test1.7z'
+ * let fpZip1 = './testData/output7z/test1.7z'
  *
  * let fpSrc2 = './testData/input/folder1'
- * let fpZip2 = './testData/output/test2.7z'
- * let fpZip2PW = './testData/output/test2PW.7z'
+ * let fpZip2 = './testData/output7z/test2.7z'
+ * let fpZip2PW = './testData/output7z/test2PW.7z'
  * let pw = 'abc'
  *
- * let fpUnzip = './testData/output'
- * let fpUnzipExtract = './testData/output/extract'
+ * let fpUnzip = './testData/output7z'
+ * let fpUnzipExtract = './testData/output7z/extract'
  *
  * async function test() {
  *
@@ -66,22 +65,22 @@ import execScript from 'wsemi/src/execScript.mjs'
  *     })
  *
  * // zipFile before
- * // zipFile finish: D:\開源-JS-003-2-w-zip\w-zip\testData\input\file1(中文).txt
+ * // zipFile finish: ./testData/output7z/test1.7z
  * // zipFile after
  * // zipFolder before
- * // zipFolder finish: D:\開源-JS-003-2-w-zip\w-zip\testData\input\folder1
+ * // zipFolder finish: ./testData/output7z/test2.7z
  * // zipFolder after
  * // zipFolder with password before
- * // zipFolder with password finish: D:\開源-JS-003-2-w-zip\w-zip\testData\input\folder1
+ * // zipFolder with password finish: ./testData/output7z/test2PW.7z
  * // zipFolder with password after
  * // unzip1 before
- * // unzip1 finish: D:\開源-JS-003-2-w-zip\w-zip\testData\output\test1.7z
+ * // unzip1 finish: ./testData/output7z/extract/test1
  * // unzip1 after
  * // unzip2 before
- * // unzip2 finish: D:\開源-JS-003-2-w-zip\w-zip\testData\output\test2.7z
+ * // unzip2 finish: ./testData/output7z/extract/test2
  * // unzip2 after
  * // unzip2 with password before
- * // unzip2 with password finish: D:\開源-JS-003-2-w-zip\w-zip\testData\output\test2PW.7z
+ * // unzip2 with password finish: ./testData/output7z/extract/test2PW
  * // unzip2 with password after
  */
 function m7z() {
@@ -157,10 +156,6 @@ function m7z() {
         let level = get(opt, 'level', 9)
         let pw = get(opt, 'pw', '')
 
-        //resolve
-        fpSrc = path.resolve(fpSrc)
-        fpTar = path.resolve(fpTar)
-
         //r
         let error = null
         let r = await zip(fpSrc, fpTar, level, pw)
@@ -174,7 +169,7 @@ function m7z() {
         }
 
         return {
-            state: 'finish: ' + fpSrc, //7z順利結束不代表就是順利完成加解壓縮
+            state: 'finish: ' + fpTar, //7z順利結束不代表就是順利完成加解壓縮
             msg7z: r,
         }
     }
@@ -205,10 +200,6 @@ function m7z() {
         let level = get(opt, 'level', 9)
         let pw = get(opt, 'pw', '')
 
-        //resolve
-        fpSrc = path.resolve(fpSrc)
-        fpTar = path.resolve(fpTar)
-
         //r
         let error = null
         let r = await zip(fpSrc, fpTar, level, pw)
@@ -222,7 +213,7 @@ function m7z() {
         }
 
         return {
-            state: 'finish: ' + fpSrc, //7z順利結束不代表就是順利完成加解壓縮
+            state: 'finish: ' + fpTar, //7z順利結束不代表就是順利完成加解壓縮
             msg7z: r,
         }
     }
@@ -251,10 +242,6 @@ function m7z() {
         //default
         let pw = get(opt, 'pw', '')
 
-        //resolve
-        fpSrc = path.resolve(fpSrc)
-        fpTar = path.resolve(fpTar)
-
         //arg
         let arg = [
             'x',
@@ -278,7 +265,7 @@ function m7z() {
         }
 
         return {
-            state: 'finish: ' + fpSrc, //7z順利結束不代表就是順利完成加解壓縮
+            state: 'finish: ' + fpTar, //7z順利結束不代表就是順利完成加解壓縮
             msg7z: r,
         }
     }

@@ -21,15 +21,15 @@ archiver.registerFormat('zip-encrypted', archiverEnc)
  * import wz from 'w-zip'
  *
  * let fpSrc1 = './testData/input/file1(中文).txt'
- * let fpZip1 = './testData/output/test1.zip'
+ * let fpZip1 = './testData/outputZip/test1.zip'
  *
  * let fpSrc2 = './testData/input/folder1'
- * let fpZip2 = './testData/output/test2.zip'
- * let fpZip2PW = './testData/output/test2PW.zip'
+ * let fpZip2 = './testData/outputZip/test2.zip'
+ * let fpZip2PW = './testData/outputZip/test2PW.zip'
  * let pw = 'abc'
  *
- * let fpUnzip = './testData/output'
- * let fpUnzipExtract = './testData/output/extract'
+ * let fpUnzip = './testData/outputZip'
+ * let fpUnzipExtract = './testData/outputZip/extract'
  *
  * async function test() {
  *
@@ -70,22 +70,22 @@ archiver.registerFormat('zip-encrypted', archiverEnc)
  *     })
  *
  * // zipFile before
- * // zipFile done: D:\開源-JS-003-2-w-zip\w-zip\testData\output\test1.zip
+ * // zipFile done: ./testData/outputZip/test1.zip
  * // zipFile after
  * // zipFolder before
- * // zipFolder done: D:\開源-JS-003-2-w-zip\w-zip\testData\output\test2.zip
+ * // zipFolder done: ./testData/outputZip/test2.zip
  * // zipFolder after
  * // zipFolder with password before
- * // zipFolder with password done: D:\開源-JS-003-2-w-zip\w-zip\testData\output\test2PW.zip
+ * // zipFolder with password done: ./testData/outputZip/test2PW.zip
  * // zipFolder with password after
  * // unzip1 before
- * // unzip1 done: D:\開源-JS-003-2-w-zip\w-zip\testData\output\extract\test1
+ * // unzip1 done: ./testData/outputZip/extract/test1
  * // unzip1 after
  * // unzip2 before
- * // unzip2 done: D:\開源-JS-003-2-w-zip\w-zip\testData\output\extract\test2
+ * // unzip2 done: ./testData/outputZip/extract/test2
  * // unzip2 after
  * // unzip2 with password before
- * // unzip2 with password done: D:\開源-JS-003-2-w-zip\w-zip\testData\output\extract\test2PW
+ * // unzip2 with password done: ./testData/outputZip/extract/test2PW
  * // unzip2 with password after
  */
 function mZip() {
@@ -125,10 +125,6 @@ function mZip() {
             if (!fs.existsSync(path.dirname(fpTar))) {
                 fs.mkdirSync(path.dirname(fpTar), { recursive: true })
             }
-
-            //resolve
-            fpSrc = path.resolve(fpSrc)
-            fpTar = path.resolve(fpTar)
 
             //archiver
             let output = fs.createWriteStream(fpTar)
@@ -209,10 +205,6 @@ function mZip() {
             if (!fs.existsSync(path.dirname(fpTar))) {
                 fs.mkdirSync(path.dirname(fpTar), { recursive: true })
             }
-
-            //resolve
-            fpSrc = path.resolve(fpSrc)
-            fpTar = path.resolve(fpTar)
 
             //archiver
             let output = fs.createWriteStream(fpTar)
@@ -342,10 +334,6 @@ function mZip() {
         }
 
         try {
-
-            //resolve
-            fpSrc = path.resolve(fpSrc)
-            fpTar = path.resolve(fpTar)
 
             //extract
             await extract(fpSrc, fpTar, pw)

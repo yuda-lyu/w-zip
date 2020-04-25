@@ -1,12 +1,11 @@
 {
   "name": "w-zip",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A tool for compression.",
   "main": "dist/w-zip.umd.js",
   "dependencies": {
     "archiver": "^4.0.1",
     "archiver-zip-encrypted": "^1.0.8",
-    "extract-zip": "^2.0.0",
     "unzipper": "^0.10.11",
     "lodash": "^4.17.15",
     "wsemi": "^1.4.8"

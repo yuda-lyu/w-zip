@@ -28,15 +28,15 @@ npm i w-zip
 import wz from 'w-zip'
 
 let fpSrc1 = './testData/input/file1(中文).txt'
-let fpZip1 = './testData/output/test1.zip'
+let fpZip1 = './testData/outputZip/test1.zip'
 
 let fpSrc2 = './testData/input/folder1'
-let fpZip2 = './testData/output/test2.zip'
-let fpZip2PW = './testData/output/test2PW.zip'
+let fpZip2 = './testData/outputZip/test2.zip'
+let fpZip2PW = './testData/outputZip/test2PW.zip'
 let pw = 'abc'
 
-let fpUnzip = './testData/output'
-let fpUnzipExtract = './testData/output/extract'
+let fpUnzip = './testData/outputZip'
+let fpUnzipExtract = './testData/outputZip/extract'
 
 async function test() {
 
@@ -77,22 +77,22 @@ test()
     })
 
 // zipFile before
-// zipFile done: D:\開源-JS-003-2-w-zip\w-zip\testData\output\test1.zip
+// zipFile done: ./testData/outputZip/test1.zip
 // zipFile after
 // zipFolder before
-// zipFolder done: D:\開源-JS-003-2-w-zip\w-zip\testData\output\test2.zip
+// zipFolder done: ./testData/outputZip/test2.zip
 // zipFolder after
 // zipFolder with password before
-// zipFolder with password done: D:\開源-JS-003-2-w-zip\w-zip\testData\output\test2PW.zip
+// zipFolder with password done: ./testData/outputZip/test2PW.zip
 // zipFolder with password after
 // unzip1 before
-// unzip1 done: D:\開源-JS-003-2-w-zip\w-zip\testData\output\extract\test1
+// unzip1 done: ./testData/outputZip/extract/test1
 // unzip1 after
 // unzip2 before
-// unzip2 done: D:\開源-JS-003-2-w-zip\w-zip\testData\output\extract\test2
+// unzip2 done: ./testData/outputZip/extract/test2
 // unzip2 after
 // unzip2 with password before
-// unzip2 with password done: D:\開源-JS-003-2-w-zip\w-zip\testData\output\extract\test2PW
+// unzip2 with password done: ./testData/outputZip/extract/test2PW
 // unzip2 with password after
 ```
 
@@ -102,15 +102,15 @@ test()
 import wz from 'w-zip'
 
 let fpSrc1 = './testData/input/file1(中文).txt'
-let fpZip1 = './testData/output/test1.7z'
+let fpZip1 = './testData/output7z/test1.7z'
 
 let fpSrc2 = './testData/input/folder1'
-let fpZip2 = './testData/output/test2.7z'
-let fpZip2PW = './testData/output/test2PW.7z'
+let fpZip2 = './testData/output7z/test2.7z'
+let fpZip2PW = './testData/output7z/test2PW.7z'
 let pw = 'abc'
 
-let fpUnzip = './testData/output'
-let fpUnzipExtract = './testData/output/extract'
+let fpUnzip = './testData/output7z'
+let fpUnzipExtract = './testData/output7z/extract'
 
 async function test() {
 
@@ -155,21 +155,21 @@ test()
     })
     
 // zipFile before
-// zipFile finish: D:\開源-JS-003-2-w-zip\w-zip\testData\input\file1(中文).txt
+// zipFile finish: ./testData/output7z/test1.7z
 // zipFile after
 // zipFolder before
-// zipFolder finish: D:\開源-JS-003-2-w-zip\w-zip\testData\input\folder1
+// zipFolder finish: ./testData/output7z/test2.7z
 // zipFolder after
 // zipFolder with password before
-// zipFolder with password finish: D:\開源-JS-003-2-w-zip\w-zip\testData\input\folder1
+// zipFolder with password finish: ./testData/output7z/test2PW.7z
 // zipFolder with password after
 // unzip1 before
-// unzip1 finish: D:\開源-JS-003-2-w-zip\w-zip\testData\output\test1.7z
+// unzip1 finish: ./testData/output7z/extract/test1
 // unzip1 after
 // unzip2 before
-// unzip2 finish: D:\開源-JS-003-2-w-zip\w-zip\testData\output\test2.7z
+// unzip2 finish: ./testData/output7z/extract/test2
 // unzip2 after
 // unzip2 with password before
-// unzip2 with password finish: D:\開源-JS-003-2-w-zip\w-zip\testData\output\test2PW.7z
+// unzip2 with password finish: ./testData/output7z/extract/test2PW
 // unzip2 with password after
 ```
