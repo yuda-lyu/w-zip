@@ -1,5 +1,5 @@
 # w-zip
-A tool for compression.
+A compression tool with zip and 7z.
 
 ![language](https://img.shields.io/badge/language-JavaScript-orange.svg) 
 [![npm version](http://img.shields.io/npm/v/w-zip.svg?style=flat)](https://npmjs.org/package/w-zip) 

@@ -1,7 +1,7 @@
 {
   "name": "w-zip",
-  "version": "1.0.3",
-  "description": "A tool for compression.",
+  "version": "1.0.4",
+  "description": "A compression tool with zip and 7z.",
   "main": "dist/w-zip.umd.js",
   "dependencies": {
     "archiver": "^4.0.1",
@@ -26,7 +26,6 @@
     "tool",
     "compression",
     "zip",
-    "adm-zip",
     "7z",
     "nodejs"
   ],
