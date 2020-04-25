@@ -1,16 +1,16 @@
 import wz from './src/WZip.mjs'
 import w from 'wsemi'
 
+let fpUnzip = './testData/outputZip'
+let fpUnzipExtract = fpUnzip + '/extract'
+
 let fpSrc1 = './testData/input/file1(中文).txt'
-let fpZip1 = './testData/outputZip/test1.zip'
+let fpZip1 = fpUnzip + '/test1.zip'
 
 let fpSrc2 = './testData/input/folder1'
-let fpZip2 = './testData/outputZip/test2.zip'
-let fpZip2PW = './testData/outputZip/test2PW.zip'
+let fpZip2 = fpUnzip + '/test2.zip'
+let fpZip2PW = fpUnzip + '/test2PW.zip'
 let pw = 'abc'
-
-let fpUnzip = './testData/outputZip'
-let fpUnzipExtract = './testData/outputZip/extract'
 
 //fsDeleteFolder
 w.fsDeleteFolder(fpUnzip)

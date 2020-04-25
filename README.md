@@ -27,16 +27,16 @@ npm i w-zip
 ```alias
 import wz from 'w-zip'
 
+let fpUnzip = './testData/outputZip'
+let fpUnzipExtract = fpUnzip + '/extract'
+
 let fpSrc1 = './testData/input/file1(中文).txt'
-let fpZip1 = './testData/outputZip/test1.zip'
+let fpZip1 = fpUnzip + '/test1.zip'
 
 let fpSrc2 = './testData/input/folder1'
-let fpZip2 = './testData/outputZip/test2.zip'
-let fpZip2PW = './testData/outputZip/test2PW.zip'
+let fpZip2 = fpUnzip + '/test2.zip'
+let fpZip2PW = fpUnzip + '/test2PW.zip'
 let pw = 'abc'
-
-let fpUnzip = './testData/outputZip'
-let fpUnzipExtract = './testData/outputZip/extract'
 
 async function test() {
 
@@ -101,16 +101,16 @@ test()
 ```alias
 import wz from 'w-zip'
 
+let fpUnzip = './testData/output7z'
+let fpUnzipExtract = fpUnzip + '/extract'
+
 let fpSrc1 = './testData/input/file1(中文).txt'
-let fpZip1 = './testData/output7z/test1.7z'
+let fpZip1 = fpUnzip + '/test1.7z'
 
 let fpSrc2 = './testData/input/folder1'
-let fpZip2 = './testData/output7z/test2.7z'
-let fpZip2PW = './testData/output7z/test2PW.7z'
+let fpZip2 = fpUnzip + '/test2.7z'
+let fpZip2PW = fpUnzip + '/test2PW.7z'
 let pw = 'abc'
-
-let fpUnzip = './testData/output7z'
-let fpUnzipExtract = './testData/output7z/extract'
 
 async function test() {
 
