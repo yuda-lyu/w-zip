@@ -1,6 +1,6 @@
 {
   "name": "w-zip",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A compression tool with zip and 7z.",
   "main": "dist/w-zip.umd.js",
   "dependencies": {
@@ -8,7 +8,7 @@
     "archiver-zip-encrypted": "^1.0.8",
     "unzipper": "^0.10.11",
     "lodash": "^4.17.15",
-    "wsemi": "^1.4.8"
+    "wsemi": "^1.4.41"
   },
   "devDependencies": {
     "w-package-tools": "^1.0.25"

@@ -56,5 +56,3 @@ test()
     .catch((err) => {
         console.log(err)
     })
-
-//node --experimental-modules --es-module-specifier-resolution=node sclb.mjs
