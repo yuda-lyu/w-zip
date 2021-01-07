@@ -4,7 +4,7 @@ module.exports = {
         "es6": true,
         "mocha": true
     },
-    "extends": ["plugin:vue/essential", "standard"],
+    "extends": ["plugin:vue/base", "plugin:vue/essential", "standard"],
     "plugins": [
         "vue"
     ],
@@ -12,7 +12,9 @@ module.exports = {
         "Atomics": "readonly",
         "SharedArrayBuffer": "readonly"
     },
+    "parser": "vue-eslint-parser",
     "parserOptions": {
+        "parser": "babel-eslint",
         "ecmaVersion": 2019,
         "sourceType": "module",
     },
