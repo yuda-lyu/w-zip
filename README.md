@@ -23,7 +23,7 @@ npm i w-zip
 ```
 
 #### Example for ZIP:
-> **Link:** [[dev source code](https://github.com/yuda-lyu/w-zip/blob/master/scla.mjs)]
+> **Link:** [[dev source code](https://github.com/yuda-lyu/w-zip/blob/master/g-zip.mjs)]
 ```alias
 import wz from 'w-zip'
 
@@ -97,7 +97,7 @@ test()
 ```
 
 #### Example for 7z:
-> **Link:** [[dev source code](https://github.com/yuda-lyu/w-zip/blob/master/sclb.mjs)]
+> **Link:** [[dev source code](https://github.com/yuda-lyu/w-zip/blob/master/g-7z.mjs)]
 ```alias
 import wz from 'w-zip'
 
