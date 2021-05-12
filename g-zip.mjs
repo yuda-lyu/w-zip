@@ -48,4 +48,4 @@ test()
         console.log(err)
     })
 
-//node --experimental-modules --es-module-specifier-resolution=node sp-zip.mjs
+//node --experimental-modules --es-module-specifier-resolution=node g-zip.mjs

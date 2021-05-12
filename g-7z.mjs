@@ -52,4 +52,4 @@ test()
         console.log(err)
     })
 
-//node --experimental-modules --es-module-specifier-resolution=node sp-7z.mjs
+//node --experimental-modules --es-module-specifier-resolution=node g-7z.mjs

@@ -14,7 +14,7 @@ To view documentation or get support, visit [docs](https://yuda-lyu.github.io/w-
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** `w-zip` depends on `archiver`, `archiver-zip-encrypted` and `unzipper`.
+> **Note:** `w-zip` is mainly dependent on `archiver`, `archiver-zip-encrypted` and `unzipper`.
 
 > **Note:** If you want to use `7z` on windows, you need to install `7z` on your computer first.
 

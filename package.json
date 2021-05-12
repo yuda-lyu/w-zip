@@ -1,20 +1,20 @@
 {
   "name": "w-zip",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "A compression tool with zip and 7z.",
   "main": "dist/w-zip.umd.js",
   "dependencies": {
-    "archiver": "^5.2.0",
-    "archiver-zip-encrypted": "^1.0.8",
+    "archiver": "^5.3.0",
+    "archiver-zip-encrypted": "^1.0.9",
     "unzipper": "^0.10.11",
-    "lodash": "^4.17.20",
-    "wsemi": "^1.5.42"
+    "lodash": "^4.17.21",
+    "wsemi": "^1.5.77"
   },
   "devDependencies": {
-    "w-package-tools": "^1.0.30"
+    "w-package-tools": "^1.0.54"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha --require @babel/register",
+    "test": "mocha --parallel --timeout 60000 --experimental-modules --es-module-specifier-resolution=node",
     "deploy": "gh-pages -d docs"
   },
   "repository": {
