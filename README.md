@@ -3,7 +3,6 @@ A compression tool with zip and 7z.
 
 ![language](https://img.shields.io/badge/language-JavaScript-orange.svg) 
 [![npm version](http://img.shields.io/npm/v/w-zip.svg?style=flat)](https://npmjs.org/package/w-zip) 
-[![Build Status](https://travis-ci.org/yuda-lyu/w-zip.svg?branch=master)](https://travis-ci.org/yuda-lyu/w-zip) 
 [![license](https://img.shields.io/npm/l/w-zip.svg?style=flat)](https://npmjs.org/package/w-zip) 
 [![gzip file size](http://img.badgesize.io/yuda-lyu/w-zip/master/dist/w-zip.umd.js.svg?compression=gzip)](https://github.com/yuda-lyu/w-zip)
 [![npm download](https://img.shields.io/npm/dt/w-zip.svg)](https://npmjs.org/package/w-zip) 
