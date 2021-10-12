@@ -6,6 +6,7 @@ import unzipper from 'unzipper'
 import get from 'lodash/get'
 import genPm from 'wsemi/src/genPm.mjs'
 import pmMap from 'wsemi/src/pmMap.mjs'
+import checkTarget from './checkTarget.mjs'
 
 
 //registerFormat
@@ -112,6 +113,11 @@ function mZip() {
             return Promise.reject('path of source is not file')
         }
 
+        //check fpTar
+        if (!checkTarget(fpTar)) {
+            return Promise.reject('invalid fpSrc')
+        }
+
         //default
         let level = get(opt, 'level', 9)
         let pw = get(opt, 'pw', '')
@@ -190,6 +196,11 @@ function mZip() {
         }
         if (!fs.lstatSync(fpSrc).isDirectory()) {
             return Promise.reject('path of source is not folder')
+        }
+
+        //check fpTar
+        if (!checkTarget(fpTar)) {
+            return Promise.reject('invalid fpSrc')
         }
 
         //default
@@ -271,6 +282,11 @@ function mZip() {
         }
         if (!fs.lstatSync(fpSrc).isFile()) {
             return Promise.reject('path of source is not file')
+        }
+
+        //check fpTar
+        if (!checkTarget(fpTar)) {
+            return Promise.reject('invalid fpSrc')
         }
 
         //default

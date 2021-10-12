@@ -1,6 +1,7 @@
 import fs from 'fs'
 import get from 'lodash/get'
 import execScript from 'wsemi/src/execScript.mjs'
+import checkTarget from './checkTarget.mjs'
 
 
 /**
@@ -144,12 +145,17 @@ function m7z() {
      */
     async function zipFile(fpSrc, fpTar, opt = {}) {
 
-        //check
+        //check fpSrc
         if (!fs.existsSync(fpSrc)) {
             return Promise.reject('invalid path of source file')
         }
         if (!fs.lstatSync(fpSrc).isFile()) {
             return Promise.reject('path of source is not file')
+        }
+
+        //check fpTar
+        if (!checkTarget(fpTar)) {
+            return Promise.reject('invalid fpSrc')
         }
 
         //default
@@ -196,6 +202,11 @@ function m7z() {
             return Promise.reject('path of source is not folder')
         }
 
+        //check fpTar
+        if (!checkTarget(fpTar)) {
+            return Promise.reject('invalid fpSrc')
+        }
+
         //default
         let level = get(opt, 'level', 9)
         let pw = get(opt, 'pw', '')
@@ -237,6 +248,11 @@ function m7z() {
         }
         if (!fs.lstatSync(fpSrc).isFile()) {
             return Promise.reject('path of source is not file')
+        }
+
+        //check fpTar
+        if (!checkTarget(fpTar)) {
+            return Promise.reject('invalid fpSrc')
         }
 
         //default

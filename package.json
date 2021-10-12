@@ -1,6 +1,6 @@
 {
   "name": "w-zip",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "A compression tool with zip and 7z.",
   "main": "dist/w-zip.umd.js",
   "dependencies": {
