@@ -6,6 +6,7 @@ import unzipper from 'unzipper'
 import get from 'lodash/get'
 import genPm from 'wsemi/src/genPm.mjs'
 import pmMap from 'wsemi/src/pmMap.mjs'
+import getFileName from 'wsemi/src/getFileName.mjs'
 import checkTarget from './checkTarget.mjs'
 
 
@@ -354,7 +355,7 @@ function mZip() {
             //extract
             await extract(fpSrc, fpTar, pw)
 
-            return Promise.resolve('done: ' + fpTar)
+            return Promise.resolve('done: ' + getFileName(fpTar))
         }
         catch (err) {
             return Promise.reject(err)

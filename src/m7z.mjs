@@ -1,6 +1,7 @@
 import fs from 'fs'
 import get from 'lodash/get'
 import execScript from 'wsemi/src/execScript.mjs'
+import getFileName from 'wsemi/src/getFileName.mjs'
 import checkTarget from './checkTarget.mjs'
 
 
@@ -281,7 +282,7 @@ function m7z() {
         }
 
         return {
-            state: 'finish: ' + fpTar, //7z順利結束不代表就是順利完成加解壓縮
+            state: 'finish: ' + getFileName(fpTar), //7z順利結束不代表就是順利完成加解壓縮
             msg7z: r,
         }
     }
