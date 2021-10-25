@@ -76,22 +76,22 @@ test()
     })
 
 // zipFile before
-// zipFile done: ./testData/outputZip/test1.zip
+// zipFile done: test1.zip
 // zipFile after
 // zipFolder before
-// zipFolder done: ./testData/outputZip/test2.zip
+// zipFolder done: test2.zip
 // zipFolder after
 // zipFolder with password before
-// zipFolder with password done: ./testData/outputZip/test2PW.zip
+// zipFolder with password done: test2PW.zip
 // zipFolder with password after
 // unzip1 before
-// unzip1 done: ./testData/outputZip/extract/test1
+// unzip1 done: test1
 // unzip1 after
 // unzip2 before
-// unzip2 done: ./testData/outputZip/extract/test2
+// unzip2 done: test2
 // unzip2 after
 // unzip2 with password before
-// unzip2 with password done: ./testData/outputZip/extract/test2PW
+// unzip2 with password done: test2PW
 // unzip2 with password after
 ```
 
@@ -154,21 +154,21 @@ test()
     })
     
 // zipFile before
-// zipFile finish: ./testData/output7z/test1.7z
+// zipFile finish: test1.7z
 // zipFile after
 // zipFolder before
-// zipFolder finish: ./testData/output7z/test2.7z
+// zipFolder finish: test2.7z
 // zipFolder after
 // zipFolder with password before
-// zipFolder with password finish: ./testData/output7z/test2PW.7z
+// zipFolder with password finish: test2PW.7z
 // zipFolder with password after
 // unzip1 before
-// unzip1 finish: ./testData/output7z/extract/test1
+// unzip1 finish: test1
 // unzip1 after
 // unzip2 before
-// unzip2 finish: ./testData/output7z/extract/test2
+// unzip2 finish: test2
 // unzip2 after
 // unzip2 with password before
-// unzip2 with password finish: ./testData/output7z/extract/test2PW
+// unzip2 with password finish: test2PW
 // unzip2 with password after
 ```

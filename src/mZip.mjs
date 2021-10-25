@@ -72,22 +72,22 @@ archiver.registerFormat('zip-encrypted', archiverEnc)
  *     })
  *
  * // zipFile before
- * // zipFile done: ./testData/outputZip/test1.zip
+ * // zipFile done: test1.zip
  * // zipFile after
  * // zipFolder before
- * // zipFolder done: ./testData/outputZip/test2.zip
+ * // zipFolder done: test2.zip
  * // zipFolder after
  * // zipFolder with password before
- * // zipFolder with password done: ./testData/outputZip/test2PW.zip
+ * // zipFolder with password done: test2PW.zip
  * // zipFolder with password after
  * // unzip1 before
- * // unzip1 done: ./testData/outputZip/extract/test1
+ * // unzip1 done: test1
  * // unzip1 after
  * // unzip2 before
- * // unzip2 done: ./testData/outputZip/extract/test2
+ * // unzip2 done: test2
  * // unzip2 after
  * // unzip2 with password before
- * // unzip2 with password done: ./testData/outputZip/extract/test2PW
+ * // unzip2 with password done: test2PW
  * // unzip2 with password after
  */
 function mZip() {

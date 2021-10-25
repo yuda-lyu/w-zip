@@ -67,22 +67,22 @@ import checkTarget from './checkTarget.mjs'
  *     })
  *
  * // zipFile before
- * // zipFile finish: ./testData/output7z/test1.7z
+ * // zipFile finish: test1.7z
  * // zipFile after
  * // zipFolder before
- * // zipFolder finish: ./testData/output7z/test2.7z
+ * // zipFolder finish: test2.7z
  * // zipFolder after
  * // zipFolder with password before
- * // zipFolder with password finish: ./testData/output7z/test2PW.7z
+ * // zipFolder with password finish: test2PW.7z
  * // zipFolder with password after
  * // unzip1 before
- * // unzip1 finish: ./testData/output7z/extract/test1
+ * // unzip1 finish: test1
  * // unzip1 after
  * // unzip2 before
- * // unzip2 finish: ./testData/output7z/extract/test2
+ * // unzip2 finish: test2
  * // unzip2 after
  * // unzip2 with password before
- * // unzip2 with password finish: ./testData/output7z/extract/test2PW
+ * // unzip2 with password finish: test2PW
  * // unzip2 with password after
  */
 function m7z() {
