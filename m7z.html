@@ -14,6 +14,7 @@
     <link type="text/css" rel="stylesheet" href="styles/prettify.css">
     <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
     <script src="scripts/nav.js" defer></script>
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -27,7 +28,9 @@
 
 <nav >
     
+    
     <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="m7z.html">m7z</a><ul class='methods'><li data-type='method'><a href="m7z.html#.setProg">setProg</a></li><li data-type='method'><a href="m7z.html#.unzip">unzip</a></li><li data-type='method'><a href="m7z.html#.zipFile">zipFile</a></li><li data-type='method'><a href="m7z.html#.zipFolder">zipFolder</a></li></ul></li><li><a href="mZip.html">mZip</a><ul class='methods'><li data-type='method'><a href="mZip.html#.unzip">unzip</a></li><li data-type='method'><a href="mZip.html#.zipFile">zipFile</a></li><li data-type='method'><a href="mZip.html#.zipFolder">zipFolder</a></li></ul></li></ul>
+    
 </nav>
 
 <div id="main">
@@ -45,7 +48,9 @@
 <header>
     
         <h2>
-        m7z
+        
+            m7z
+        
         </h2>
         
     
@@ -67,6 +72,10 @@
 
 
 <dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>7z處理</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
@@ -110,19 +119,13 @@
 
 
 
-<div class="description usertext">
-    <p>7z處理</p>
-</div>
 
 
 
 
 
 
-
-
-
-    <h5>Example</h5>
+    <h5 class="h5-examples">Example</h5>
     
     <pre class="prettyprint"><code>import wz from 'w-zip'let fpUnzip = './testData/output7z'let fpUnzipExtract = fpUnzip + '/extract'let fpSrc1 = './testData/input/file1(中文).txt'let fpZip1 = fpUnzip + '/test1.7z'let fpSrc2 = './testData/input/folder1'let fpZip2 = fpUnzip + '/test2.7z'let fpZip2PW = fpUnzip + '/test2PW.7z'let pw = 'abc'async function test() {    // //setProg    // let path7zexe = 'path of 7zEXE'    // wz.m7z.setProg(path7zexe)    //zipFile    console.log('zipFile before')    console.log('zipFile', await wz.m7z.zipFile(fpSrc1, fpZip1))    console.log('zipFile after')    //zipFolder    console.log('zipFolder before')    console.log('zipFolder', await wz.m7z.zipFolder(fpSrc2, fpZip2))    console.log('zipFolder after')    //zipFolder with password    console.log('zipFolder with password before')    console.log('zipFolder with password', await wz.m7z.zipFolder(fpSrc2, fpZip2PW, { pw }))    console.log('zipFolder with password after')    //unzip    console.log('unzip1 before')    console.log('unzip1', await wz.m7z.unzip(fpZip1, fpUnzipExtract + '/test1'))    console.log('unzip1 after')    //unzip    console.log('unzip2 before')    console.log('unzip2', await wz.m7z.unzip(fpZip2, fpUnzipExtract + '/test2'))    console.log('unzip2 after')    //unzip with password    console.log('unzip2 with password before')    console.log('unzip2 with password', await wz.m7z.unzip(fpZip2PW, fpUnzipExtract + '/test2PW', { pw }))    console.log('unzip2 with password after')}test()    .catch((err) => {        console.log(err)    })// zipFile before// zipFile finish: test1.7z// zipFile after// zipFolder before// zipFolder finish: test2.7z// zipFolder after// zipFolder with password before// zipFolder with password finish: test2PW.7z// zipFolder with password after// unzip1 before// unzip1 finish: test1// unzip1 after// unzip2 before// unzip2 finish: test2// unzip2 after// unzip2 with password before// unzip2 with password finish: test2PW// unzip2 with password after</code></pre>
 
@@ -143,7 +146,7 @@
 
 
 
-<h5>Returns:</h5>
+<h5 class="h5-returns">Returns:</h5>
 
         
 <div class="param-desc">
@@ -159,6 +162,7 @@
     <dd>
         
 <span class="param-type">Object</span>
+
 
 
     </dd>
@@ -194,7 +198,7 @@
 
     
 
-    <h4 class="name" id=".setProg"><span class="type-signature">(static) </span>setProg<span class="signature">(path7zexe<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    <h4 class="name" id=".setProg"><span class="type-signature type-signature-static">(static) </span>setProg<span class="signature">(path7zexe<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></h4>
 
     
 
@@ -202,6 +206,10 @@
 
 
 <dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>設定7z執行檔位置</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
@@ -245,9 +253,6 @@
 
 
 
-<div class="description usertext">
-    <p>設定7z執行檔位置</p>
-</div>
 
 
 
@@ -256,10 +261,7 @@
 
 
 
-
-
-
-    <h5>Parameters:</h5>
+    <h5 class="h5-parameters">Parameters:</h5>
     
 
 <table class="params">
@@ -295,6 +297,7 @@
             
                 
 <span class="param-type">String</span>
+
 
 
             
@@ -342,7 +345,7 @@
 
 
 
-<h5>Returns:</h5>
+<h5 class="h5-returns">Returns:</h5>
 
         
 <div class="param-desc">
@@ -360,6 +363,7 @@
 <span class="param-type">Object</span>
 
 
+
     </dd>
 </dl>
 
@@ -372,7 +376,7 @@
 
     
 
-    <h4 class="name" id=".unzip"><span class="type-signature">(async, static) </span>unzip<span class="signature">(fpSrc, fpTar, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    <h4 class="name" id=".unzip"><span class="type-signature type-signature-async, static">(async, static) </span>unzip<span class="signature">(fpSrc, fpTar, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
 
     
 
@@ -380,6 +384,10 @@
 
 
 <dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>解壓縮檔案至資料夾</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
@@ -423,9 +431,6 @@
 
 
 
-<div class="description usertext">
-    <p>解壓縮檔案至資料夾</p>
-</div>
 
 
 
@@ -434,10 +439,7 @@
 
 
 
-
-
-
-    <h5>Parameters:</h5>
+    <h5 class="h5-parameters">Parameters:</h5>
     
 
 <table class="params">
@@ -475,6 +477,7 @@
 <span class="param-type">String</span>
 
 
+
             
             </td>
 
@@ -510,6 +513,7 @@
 <span class="param-type">String</span>
 
 
+
             
             </td>
 
@@ -543,6 +547,7 @@
             
                 
 <span class="param-type">Object</span>
+
 
 
             
@@ -605,6 +610,7 @@
             
                 
 <span class="param-type">String</span>
+
 
 
             
@@ -659,7 +665,7 @@
 
 
 
-<h5>Returns:</h5>
+<h5 class="h5-returns">Returns:</h5>
 
         
 <div class="param-desc">
@@ -677,6 +683,7 @@
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
@@ -689,7 +696,7 @@
 
     
 
-    <h4 class="name" id=".zipFile"><span class="type-signature">(async, static) </span>zipFile<span class="signature">(fpSrc, fpTar, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    <h4 class="name" id=".zipFile"><span class="type-signature type-signature-async, static">(async, static) </span>zipFile<span class="signature">(fpSrc, fpTar, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
 
     
 
@@ -697,6 +704,10 @@
 
 
 <dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>壓縮檔案</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
@@ -740,9 +751,6 @@
 
 
 
-<div class="description usertext">
-    <p>壓縮檔案</p>
-</div>
 
 
 
@@ -751,10 +759,7 @@
 
 
 
-
-
-
-    <h5>Parameters:</h5>
+    <h5 class="h5-parameters">Parameters:</h5>
     
 
 <table class="params">
@@ -792,6 +797,7 @@
 <span class="param-type">String</span>
 
 
+
             
             </td>
 
@@ -827,6 +833,7 @@
 <span class="param-type">String</span>
 
 
+
             
             </td>
 
@@ -860,6 +867,7 @@
             
                 
 <span class="param-type">Object</span>
+
 
 
             
@@ -922,6 +930,7 @@
 <span class="param-type">Integer</span>
 
 
+
             
             </td>
 
@@ -953,6 +962,7 @@
             
                 
 <span class="param-type">String</span>
+
 
 
             
@@ -1001,7 +1011,7 @@
 
 
 
-<h5>Returns:</h5>
+<h5 class="h5-returns">Returns:</h5>
 
         
 <div class="param-desc">
@@ -1019,6 +1029,7 @@
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
@@ -1031,7 +1042,7 @@
 
     
 
-    <h4 class="name" id=".zipFolder"><span class="type-signature">(async, static) </span>zipFolder<span class="signature">(fpSrc, fpTar, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    <h4 class="name" id=".zipFolder"><span class="type-signature type-signature-async, static">(async, static) </span>zipFolder<span class="signature">(fpSrc, fpTar, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
 
     
 
@@ -1039,6 +1050,10 @@
 
 
 <dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>壓縮資料夾</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
@@ -1082,9 +1097,6 @@
 
 
 
-<div class="description usertext">
-    <p>壓縮資料夾</p>
-</div>
 
 
 
@@ -1093,10 +1105,7 @@
 
 
 
-
-
-
-    <h5>Parameters:</h5>
+    <h5 class="h5-parameters">Parameters:</h5>
     
 
 <table class="params">
@@ -1134,6 +1143,7 @@
 <span class="param-type">String</span>
 
 
+
             
             </td>
 
@@ -1169,6 +1179,7 @@
 <span class="param-type">String</span>
 
 
+
             
             </td>
 
@@ -1202,6 +1213,7 @@
             
                 
 <span class="param-type">Object</span>
+
 
 
             
@@ -1264,6 +1276,7 @@
 <span class="param-type">Integer</span>
 
 
+
             
             </td>
 
@@ -1295,6 +1308,7 @@
             
                 
 <span class="param-type">String</span>
+
 
 
             
@@ -1343,7 +1357,7 @@
 
 
 
-<h5>Returns:</h5>
+<h5 class="h5-returns">Returns:</h5>
 
         
 <div class="param-desc">
@@ -1359,6 +1373,7 @@
     <dd>
         
 <span class="param-type">Promise</span>
+
 
 
     </dd>
@@ -1388,7 +1403,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.10</a> on Thu Jan 19 2023 14:28:37 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Wed Mar 29 2023 15:18:57 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
