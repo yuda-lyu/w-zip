@@ -1,5 +1,5 @@
 import fs from 'fs'
-import get from 'lodash-es/get'
+import get from 'lodash-es/get.js'
 import execScript from 'wsemi/src/execScript.mjs'
 import getFileName from 'wsemi/src/getFileName.mjs'
 import checkTarget from './checkTarget.mjs'

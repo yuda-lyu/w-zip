@@ -12,6 +12,10 @@ let fpZip2 = fpUnzip + '/test2.7z'
 let fpZip2PW = fpUnzip + '/test2PW.7z'
 let pw = 'abc'
 
+let fpUnzip1 = fpUnzipExtract + '/test1'
+let fpUnzip2 = fpUnzipExtract + '/test2'
+let fpUnzip2PW = fpUnzipExtract + '/test2'
+
 //fsDeleteFolder
 w.fsDeleteFolder(fpUnzip)
 
@@ -35,15 +39,15 @@ async function test() {
 
     //unzip
     console.log('unzip1')
-    console.log((await wz.m7z.unzip(fpZip1, fpUnzipExtract + '/test1')).state)
+    console.log((await wz.m7z.unzip(fpZip1, fpUnzip1)).state)
 
     //unzip
     console.log('unzip2')
-    console.log((await wz.m7z.unzip(fpZip2, fpUnzipExtract + '/test2')).state)
+    console.log((await wz.m7z.unzip(fpZip2, fpUnzip2)).state)
 
     //unzip with password
     console.log('unzip2 with password')
-    console.log((await wz.m7z.unzip(fpZip2PW, fpUnzipExtract + '/test2PW', { pw })).state)
+    console.log((await wz.m7z.unzip(fpZip2PW, fpUnzip2PW, { pw })).state)
 
     console.log('finish')
 }

@@ -1,16 +1,16 @@
 {
   "name": "w-zip",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "main": "dist/w-zip.umd.js",
   "dependencies": {
     "archiver": "^7.0.1",
     "archiver-zip-encrypted": "^1.0.11",
     "unzipper": "^0.10.14",
     "lodash-es": "^4.17.21",
-    "wsemi": "^1.7.47"
+    "wsemi": "^1.7.49"
   },
   "devDependencies": {
-    "w-package-tools": "^1.0.73"
+    "w-package-tools": "^1.0.75"
   },
   "scripts": {
     "test": "mocha --parallel --timeout 60000 --experimental-modules --es-module-specifier-resolution=node",
