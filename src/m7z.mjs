@@ -1,6 +1,6 @@
 import fs from 'fs'
 import get from 'lodash-es/get.js'
-import execScript from 'wsemi/src/execScript.mjs'
+import execProcess from 'wsemi/src/execProcess.mjs'
 import getFileName from 'wsemi/src/getFileName.mjs'
 import checkTarget from './checkTarget.mjs'
 
@@ -129,7 +129,8 @@ function m7z() {
         if (pw !== '') {
             arg.push(`-p${pw}`)
         }
-        return execScript(prog, arg)
+        let r = await execProcess(prog, arg)
+        return r
     }
 
 
@@ -271,7 +272,7 @@ function m7z() {
 
         //r
         let error = null
-        let r = await execScript(prog, arg)
+        let r = await execProcess(prog, arg)
             .catch((err) => {
                 error = err
             })

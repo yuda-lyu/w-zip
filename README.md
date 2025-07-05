@@ -4,7 +4,6 @@ A compression tool with zip and 7z.
 ![language](https://img.shields.io/badge/language-JavaScript-orange.svg) 
 [![npm version](http://img.shields.io/npm/v/w-zip.svg?style=flat)](https://npmjs.org/package/w-zip) 
 [![license](https://img.shields.io/npm/l/w-zip.svg?style=flat)](https://npmjs.org/package/w-zip) 
-[![gzip file size](http://img.badgesize.io/yuda-lyu/w-zip/master/dist/w-zip.umd.js.svg?compression=gzip)](https://github.com/yuda-lyu/w-zip)
 [![npm download](https://img.shields.io/npm/dt/w-zip.svg)](https://npmjs.org/package/w-zip) 
 [![npm download](https://img.shields.io/npm/dm/w-zip.svg)](https://npmjs.org/package/w-zip) 
 [![jsdelivr download](https://img.shields.io/jsdelivr/npm/hm/w-zip.svg)](https://www.jsdelivr.com/package/npm/w-zip)
@@ -12,12 +11,11 @@ A compression tool with zip and 7z.
 ## Documentation
 To view documentation or get support, visit [docs](https://yuda-lyu.github.io/w-zip/mZip.html).
 
+## Core
+> If you want to use `7z` on windows, it needs to install `7z`.
+
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** `w-zip` is mainly dependent on `archiver`, `archiver-zip-encrypted` and `unzipper`.
-
-> **Note:** If you want to use `7z` on windows, it needs to install `7z`.
-
 ```alias
 npm i w-zip
 ```

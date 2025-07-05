@@ -3,6 +3,11 @@ import w from 'wsemi'
 import wz from '../src/WZip.mjs'
 
 
+// function isWindows() {
+//     return process.platform === 'win32'
+// }
+
+
 describe('zip', function() {
 
     let fpUnzip = './testData/outputZip'
