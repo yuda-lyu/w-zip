@@ -17,4 +17,3 @@ npm run deploy
 #node g-zip.mjs
 
 #npm publish
-

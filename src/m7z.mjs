@@ -274,7 +274,7 @@ function m7z() {
         let error = null
         let r = await execProcess(prog, arg)
             .catch((err) => {
-                error = err
+                error = err.toString()
             })
 
         //check
