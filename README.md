@@ -15,6 +15,7 @@ To view documentation or get support, visit [docs](https://yuda-lyu.github.io/w-
 > If you want to use `7z` on windows, it needs to install `7z`.
 
 ## Installation
+
 ### Using npm(ES6 module):
 ```alias
 npm i w-zip
