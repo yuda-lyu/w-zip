@@ -13,13 +13,13 @@ import checkTarget from './checkTarget.mjs'
  * @example
  * import wz from 'w-zip'
  *
- * let fpUnzip = './testData/output7z'
+ * let fpUnzip = './test/output7z'
  * let fpUnzipExtract = fpUnzip + '/extract'
  *
- * let fpSrc1 = './testData/input/file1(中文).txt'
+ * let fpSrc1 = './test/input/file1(中文).txt'
  * let fpZip1 = fpUnzip + '/test1.7z'
  *
- * let fpSrc2 = './testData/input/folder1'
+ * let fpSrc2 = './test/input/folder1'
  * let fpZip2 = fpUnzip + '/test2.7z'
  * let fpZip2PW = fpUnzip + '/test2PW.7z'
  * let pw = 'abc'
@@ -119,7 +119,7 @@ function m7z() {
     }
 
 
-    async function zip(fpSrc, fpTar, level = 9, pw = '') {
+    async function zip(fpSrc, fpTar, level = 1, pw = '') { //7z的-mx1為最快速壓縮(mx0為不壓縮)
         let arg = [
             'a',
             fpTar,
@@ -141,8 +141,8 @@ function m7z() {
      * @param {String} fpSrc 輸入壓縮來源檔案位置字串
      * @param {String} fpTar 輸入壓縮目標檔案位置字串
      * @param {Object} [opt={}] 輸入設定物件，預設{}
-     * @param {Integer} [opt.level] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，預設9
-     * @param {String} [opt.pw] 輸入壓縮密碼字串，預設''
+     * @param {Integer} [opt.level=1] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，預設1為最快速壓縮
+     * @param {String} [opt.pw=''] 輸入壓縮密碼字串，預設''
      * @returns {Promise} 回傳Promise，resolve為成功資訊，reject為失敗資訊
      */
     async function zipFile(fpSrc, fpTar, opt = {}) {
@@ -161,7 +161,7 @@ function m7z() {
         }
 
         //default
-        let level = get(opt, 'level', 9)
+        let level = get(opt, 'level', 1)
         let pw = get(opt, 'pw', '')
 
         //r
@@ -190,7 +190,7 @@ function m7z() {
      * @param {String} fpSrc 輸入壓縮來源資料夾位置字串
      * @param {String} fpTar 輸入壓縮目標資料夾位置字串
      * @param {Object} [opt={}] 輸入設定物件，預設{}
-     * @param {Integer} [opt.level] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，預設9
+     * @param {Integer} [opt.level=1] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，預設1為最快速壓縮
      * @param {String} [opt.pw] 輸入壓縮密碼字串，預設''
      * @returns {Promise} 回傳Promise，resolve為成功資訊，reject為失敗資訊
      */
@@ -210,7 +210,7 @@ function m7z() {
         }
 
         //default
-        let level = get(opt, 'level', 9)
+        let level = get(opt, 'level', 1)
         let pw = get(opt, 'pw', '')
 
         //r

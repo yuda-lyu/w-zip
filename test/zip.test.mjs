@@ -10,13 +10,13 @@ import wz from '../src/WZip.mjs'
 
 describe('zip', function() {
 
-    let fpUnzip = './testData/outputZip'
+    let fpUnzip = './test/outputZip'
     let fpUnzipExtract = fpUnzip + '/extract'
 
-    let fpSrc1 = './testData/input/file1(中文).txt'
+    let fpSrc1 = './test/input/file1(中文).txt'
     let fpZip1 = fpUnzip + '/test1.zip'
 
-    let fpSrc2 = './testData/input/folder1'
+    let fpSrc2 = './test/input/folder1'
     let fpZip2 = fpUnzip + '/test2.zip'
     let fpZip2PW = fpUnzip + '/test2PW.zip'
     let pw = 'abc'

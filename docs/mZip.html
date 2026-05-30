@@ -80,7 +80,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line93">line 93</a>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line90">line 90</a>
     </li></ul></dd>
     
 
@@ -127,7 +127,7 @@
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>import wz from 'w-zip'let fpUnzip = './testData/outputZip'let fpUnzipExtract = fpUnzip + '/extract'let fpSrc1 = './testData/input/file1(中文).txt'let fpZip1 = fpUnzip + '/test1.zip'let fpSrc2 = './testData/input/folder1'let fpZip2 = fpUnzip + '/test2.zip'let fpZip2PW = fpUnzip + '/test2PW.zip'let pw = 'abc'async function test() {    //zipFile    console.log('zipFile before')    console.log('zipFile', await wz.mZip.zipFile(fpSrc1, fpZip1))    console.log('zipFile after')    //zipFolder    console.log('zipFolder before')    console.log('zipFolder', await wz.mZip.zipFolder(fpSrc2, fpZip2))    console.log('zipFolder after')    //zipFolder with password    console.log('zipFolder with password before')    console.log('zipFolder with password', await wz.mZip.zipFolder(fpSrc2, fpZip2PW, { pw }))    console.log('zipFolder with password after')    //unzip    console.log('unzip1 before')    console.log('unzip1', await wz.mZip.unzip(fpZip1, fpUnzipExtract + '/test1'))    console.log('unzip1 after')    //unzip    console.log('unzip2 before')    console.log('unzip2', await wz.mZip.unzip(fpZip2, fpUnzipExtract + '/test2'))    console.log('unzip2 after')    //unzip with password    console.log('unzip2 with password before')    console.log('unzip2 with password', await wz.mZip.unzip(fpZip2PW, fpUnzipExtract + '/test2PW', { pw }))    console.log('unzip2 with password after')}test()    .catch((err) => {        console.log(err)    })// zipFile before// zipFile done: test1.zip// zipFile after// zipFolder before// zipFolder done: test2.zip// zipFolder after// zipFolder with password before// zipFolder with password done: test2PW.zip// zipFolder with password after// unzip1 before// unzip1 done: test1// unzip1 after// unzip2 before// unzip2 done: test2// unzip2 after// unzip2 with password before// unzip2 with password done: test2PW// unzip2 with password after</code></pre>
+    <pre class="prettyprint"><code>import wz from 'w-zip'let fpUnzip = './test/outputZip'let fpUnzipExtract = fpUnzip + '/extract'let fpSrc1 = './test/input/file1(中文).txt'let fpZip1 = fpUnzip + '/test1.zip'let fpSrc2 = './test/input/folder1'let fpZip2 = fpUnzip + '/test2.zip'let fpZip2PW = fpUnzip + '/test2PW.zip'let pw = 'abc'async function test() {    //zipFile    console.log('zipFile before')    console.log('zipFile', await wz.mZip.zipFile(fpSrc1, fpZip1))    console.log('zipFile after')    //zipFolder    console.log('zipFolder before')    console.log('zipFolder', await wz.mZip.zipFolder(fpSrc2, fpZip2))    console.log('zipFolder after')    //zipFolder with password    console.log('zipFolder with password before')    console.log('zipFolder with password', await wz.mZip.zipFolder(fpSrc2, fpZip2PW, { pw }))    console.log('zipFolder with password after')    //unzip    console.log('unzip1 before')    console.log('unzip1', await wz.mZip.unzip(fpZip1, fpUnzipExtract + '/test1'))    console.log('unzip1 after')    //unzip    console.log('unzip2 before')    console.log('unzip2', await wz.mZip.unzip(fpZip2, fpUnzipExtract + '/test2'))    console.log('unzip2 after')    //unzip with password    console.log('unzip2 with password before')    console.log('unzip2 with password', await wz.mZip.unzip(fpZip2PW, fpUnzipExtract + '/test2PW', { pw }))    console.log('unzip2 with password after')}test()    .catch((err) => {        console.log(err)    })// zipFile before// zipFile done: test1.zip// zipFile after// zipFolder before// zipFolder done: test2.zip// zipFolder after// zipFolder with password before// zipFolder with password done: test2PW.zip// zipFolder with password after// unzip1 before// unzip1 done: test1// unzip1 after// unzip2 before// unzip2 done: test2// unzip2 after// unzip2 with password before// unzip2 with password done: test2PW// unzip2 with password after</code></pre>
 
 
 
@@ -214,7 +214,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line278">line 278</a>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line256">line 256</a>
     </li></ul></dd>
     
 
@@ -534,7 +534,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line107">line 107</a>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line104">line 104</a>
     </li></ul></dd>
     
 
@@ -733,6 +733,8 @@
         
 
         
+        <th>Default</th>
+        
 
         <th class="last">Description</th>
     </tr>
@@ -769,6 +771,12 @@
             
 
             
+                <td class="default">
+                
+                    <code>9</code>
+                
+                </td>
+            
 
             <td class="description last"><p>輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，預設9</p></td>
         </tr>
@@ -802,6 +810,10 @@
                 </td>
             
 
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入壓縮密碼字串，預設''</p></td>
@@ -880,7 +892,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line192">line 192</a>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line167">line 167</a>
     </li></ul></dd>
     
 
@@ -1085,7 +1097,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Tue Oct 07 2025 10:35:56 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat May 30 2026 20:38:46 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

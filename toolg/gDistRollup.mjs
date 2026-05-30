@@ -15,17 +15,13 @@ rollupFiles({
         'path': 'path',
         'fs': 'fs',
         'child_process': 'child_process',
-        'archiver': 'archiver',
-        'archiver-zip-encrypted': 'archiver-zip-encrypted',
-        'unzipper': 'unzipper',
+        '@zip.js/zip.js': 'zip',
     },
     external: [
         'path',
         'fs',
         'child_process',
-        'archiver',
-        'archiver-zip-encrypted',
-        'unzipper',
+        '@zip.js/zip.js',
     ],
 })
 

@@ -26,13 +26,13 @@ npm i w-zip
 ```alias
 import wz from 'w-zip'
 
-let fpUnzip = './testData/outputZip'
+let fpUnzip = './test/outputZip'
 let fpUnzipExtract = fpUnzip + '/extract'
 
-let fpSrc1 = './testData/input/file1(中文).txt'
+let fpSrc1 = './test/input/file1(中文).txt'
 let fpZip1 = fpUnzip + '/test1.zip'
 
-let fpSrc2 = './testData/input/folder1'
+let fpSrc2 = './test/input/folder1'
 let fpZip2 = fpUnzip + '/test2.zip'
 let fpZip2PW = fpUnzip + '/test2PW.zip'
 let pw = 'abc'
@@ -100,13 +100,13 @@ test()
 ```alias
 import wz from 'w-zip'
 
-let fpUnzip = './testData/output7z'
+let fpUnzip = './test/output7z'
 let fpUnzipExtract = fpUnzip + '/extract'
 
-let fpSrc1 = './testData/input/file1(中文).txt'
+let fpSrc1 = './test/input/file1(中文).txt'
 let fpZip1 = fpUnzip + '/test1.7z'
 
-let fpSrc2 = './testData/input/folder1'
+let fpSrc2 = './test/input/folder1'
 let fpZip2 = fpUnzip + '/test2.7z'
 let fpZip2PW = fpUnzip + '/test2PW.7z'
 let pw = 'abc'
