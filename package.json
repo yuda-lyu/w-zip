@@ -1,10 +1,10 @@
 {
   "name": "w-zip",
-  "version": "1.0.26",
+  "version": "1.0.27",
   "main": "dist/w-zip.umd.js",
   "dependencies": {
     "@zip.js/zip.js": "^2.8.26",
-    "wsemi": "^1.8.68"
+    "wsemi": "^1.8.70"
   },
   "devDependencies": {
     "w-package-tools": "^1.1.12"
