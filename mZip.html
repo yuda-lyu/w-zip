@@ -29,7 +29,7 @@
 <nav >
     
     
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="m7z.html">m7z</a><ul class='methods'><li data-type='method'><a href="m7z.html#.setProg">setProg</a></li><li data-type='method'><a href="m7z.html#.unzip">unzip</a></li><li data-type='method'><a href="m7z.html#.zipFile">zipFile</a></li><li data-type='method'><a href="m7z.html#.zipFolder">zipFolder</a></li></ul></li><li><a href="mZip.html">mZip</a><ul class='methods'><li data-type='method'><a href="mZip.html#.unzip">unzip</a></li><li data-type='method'><a href="mZip.html#.zipFile">zipFile</a></li><li data-type='method'><a href="mZip.html#.zipFolder">zipFolder</a></li></ul></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="m7z.html">m7z</a><ul class='methods'><li data-type='method'><a href="m7z.html#.setProg">setProg</a></li><li data-type='method'><a href="m7z.html#.unzip">unzip</a></li><li data-type='method'><a href="m7z.html#.zipFile">zipFile</a></li><li data-type='method'><a href="m7z.html#.zipFolder">zipFolder</a></li></ul></li><li><a href="mZip.html">mZip</a><ul class='methods'><li data-type='method'><a href="mZip.html#.listEntries">listEntries</a></li><li data-type='method'><a href="mZip.html#.readEntry">readEntry</a></li><li data-type='method'><a href="mZip.html#.unzip">unzip</a></li><li data-type='method'><a href="mZip.html#.zipFile">zipFile</a></li><li data-type='method'><a href="mZip.html#.zipFolder">zipFolder</a></li></ul></li></ul>
     
 </nav>
 
@@ -80,7 +80,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line90">line 90</a>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line121">line 121</a>
     </li></ul></dd>
     
 
@@ -127,7 +127,7 @@
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>import wz from 'w-zip'let fpUnzip = './test/outputZip'let fpUnzipExtract = fpUnzip + '/extract'let fpSrc1 = './test/input/file1(中文).txt'let fpZip1 = fpUnzip + '/test1.zip'let fpSrc2 = './test/input/folder1'let fpZip2 = fpUnzip + '/test2.zip'let fpZip2PW = fpUnzip + '/test2PW.zip'let pw = 'abc'async function test() {    //zipFile    console.log('zipFile before')    console.log('zipFile', await wz.mZip.zipFile(fpSrc1, fpZip1))    console.log('zipFile after')    //zipFolder    console.log('zipFolder before')    console.log('zipFolder', await wz.mZip.zipFolder(fpSrc2, fpZip2))    console.log('zipFolder after')    //zipFolder with password    console.log('zipFolder with password before')    console.log('zipFolder with password', await wz.mZip.zipFolder(fpSrc2, fpZip2PW, { pw }))    console.log('zipFolder with password after')    //unzip    console.log('unzip1 before')    console.log('unzip1', await wz.mZip.unzip(fpZip1, fpUnzipExtract + '/test1'))    console.log('unzip1 after')    //unzip    console.log('unzip2 before')    console.log('unzip2', await wz.mZip.unzip(fpZip2, fpUnzipExtract + '/test2'))    console.log('unzip2 after')    //unzip with password    console.log('unzip2 with password before')    console.log('unzip2 with password', await wz.mZip.unzip(fpZip2PW, fpUnzipExtract + '/test2PW', { pw }))    console.log('unzip2 with password after')}test()    .catch((err) => {        console.log(err)    })// zipFile before// zipFile done: test1.zip// zipFile after// zipFolder before// zipFolder done: test2.zip// zipFolder after// zipFolder with password before// zipFolder with password done: test2PW.zip// zipFolder with password after// unzip1 before// unzip1 done: test1// unzip1 after// unzip2 before// unzip2 done: test2// unzip2 after// unzip2 with password before// unzip2 with password done: test2PW// unzip2 with password after</code></pre>
+    <pre class="prettyprint"><code>import wz from 'w-zip'let fpUnzip = './test/outputZip'let fpUnzipExtract = fpUnzip + '/extract'let fpSrc1 = './test/input/file1(中文).txt'let fpZip1 = fpUnzip + '/test1.zip'let fpSrc2 = './test/input/folder1'let fpZip2 = fpUnzip + '/test2.zip'let fpZip2PW = fpUnzip + '/test2PW.zip'let pw = 'abc'async function test() {    //zipFile    console.log('zipFile before')    console.log('zipFile', await wz.mZip.zipFile(fpSrc1, fpZip1))    console.log('zipFile after')    //zipFolder    console.log('zipFolder before')    console.log('zipFolder', await wz.mZip.zipFolder(fpSrc2, fpZip2))    console.log('zipFolder after')    //zipFolder with password    console.log('zipFolder with password before')    console.log('zipFolder with password', await wz.mZip.zipFolder(fpSrc2, fpZip2PW, { pw }))    console.log('zipFolder with password after')    //unzip    console.log('unzip1 before')    console.log('unzip1', await wz.mZip.unzip(fpZip1, fpUnzipExtract + '/test1'))    console.log('unzip1 after')    //unzip    console.log('unzip2 before')    console.log('unzip2', await wz.mZip.unzip(fpZip2, fpUnzipExtract + '/test2'))    console.log('unzip2 after')    //unzip with password    console.log('unzip2 with password before')    console.log('unzip2 with password', await wz.mZip.unzip(fpZip2PW, fpUnzipExtract + '/test2PW', { pw }))    console.log('unzip2 with password after')    //listEntries    console.log('listEntries before')    console.log('listEntries', (await wz.mZip.listEntries(fpZip2)).map((v) => v.filename))    console.log('listEntries after')    //readEntry    console.log('readEntry before')    console.log('readEntry', JSON.parse(await wz.mZip.readEntry(fpZip1, 'file1(中文).txt')).name)    console.log('readEntry after')    //readEntry with password    console.log('readEntry with password before')    console.log('readEntry with password', (await wz.mZip.readEntry(fpZip2PW, 'folder1/f1-1.xlsx', { type: 'u8', pw })).length)    console.log('readEntry with password after')}test()    .catch((err) => {        console.log(err)    })// zipFile before// zipFile done: test1.zip// zipFile after// zipFolder before// zipFolder done: test2.zip// zipFolder after// zipFolder with password before// zipFolder with password done: test2PW.zip// zipFolder with password after// unzip1 before// unzip1 done: test1// unzip1 after// unzip2 before// unzip2 done: test2// unzip2 after// unzip2 with password before// unzip2 with password done: test2PW// unzip2 with password after// listEntries before// listEntries [//   'folder1/f1-1.xlsx',//   'folder1/f1-2.xlsx',//   'folder1/folder2/',//   'folder1/folder2/f2-1.xlsx',//   'folder1/folder2/f2-2.xlsx',//   'folder1/folder2/f2-3(中文).xlsx'// ]// listEntries after// readEntry before// readEntry w-backup// readEntry after// readEntry with password before// readEntry with password 6663// readEntry with password after</code></pre>
 
 
 
@@ -150,7 +150,7 @@
 
         
 <div class="param-desc">
-    <p>回傳壓縮物件，可使用函數zipFile、zipFolder、unzip</p>
+    <p>回傳壓縮物件，可使用函數zipFile、zipFolder、unzip、listEntries、readEntry</p>
 </div>
 
 
@@ -198,6 +198,539 @@
 
     
 
+    <h4 class="name" id=".listEntries"><span class="type-signature type-signature-async, static">(async, static) </span>listEntries<span class="signature">(src)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>列出壓縮檔內項目，不解壓至資料夾</p>
+<p>加密之壓縮檔不需密碼即可列出。含不安全路徑(例如'../'、絕對路徑、磁碟代號)項目之壓縮檔會整個reject。
+項目名以''分隔者會正規化為'/'。項目名未標示UTF-8且無Unicode路徑欄位者(例如部分工具以Big5寫入)，依zip.js預設以CP437解碼，名稱會呈現亂碼，讀取時須使用回傳之名稱。</p></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line455">line 455</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>src</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Buffer</span>
+|
+
+<span class="param-type">Uint8Array</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>輸入壓縮檔案位置字串，或壓縮檔內容之Buffer、Uint8Array，給予檔案位置時只讀取中央目錄而不載入整個檔案</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳Promise，resolve為項目陣列，依壓縮檔中央目錄順序，各項目為{filename,directory,uncompressedSize,compressedSize,encrypted,lastModDate}，filename為壓縮檔內以'/'分隔之路徑，reject為失敗資訊</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".readEntry"><span class="type-signature type-signature-async, static">(async, static) </span>readEntry<span class="signature">(src, filename, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>讀取壓縮檔內單一項目，不解壓至資料夾</p>
+<p>讀出內容會驗證CRC32，資料損毀或密碼錯誤時reject。含不安全路徑(例如'../'、絕對路徑、磁碟代號)項目之壓縮檔會整個reject。</p></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line501">line 501</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>src</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Buffer</span>
+|
+
+<span class="param-type">Uint8Array</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入壓縮檔案位置字串，或壓縮檔內容之Buffer、Uint8Array，給予檔案位置時只讀取中央目錄與該項目而不載入整個檔案</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>filename</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入項目路徑字串，須與listEntries回傳之filename完全相同(以'/'分隔且區分大小寫)，若有同名項目則取最後一筆</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>type</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>'text'</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入回傳資料型態字串，可選'text'為UTF-8解碼之字串(去除BOM)、'u8'為Uint8Array，非UTF-8之文字內容請用'u8'自行解碼，預設'text'</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pw</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>''</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入解壓縮密碼字串，預設''</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳Promise，resolve為項目內容之字串或Uint8Array，reject為失敗資訊，找不到項目或項目為資料夾時亦為reject</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id=".unzip"><span class="type-signature type-signature-async, static">(async, static) </span>unzip<span class="signature">(fpSrc, fpTar, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
 
     
@@ -214,7 +747,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line256">line 256</a>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line287">line 287</a>
     </li></ul></dd>
     
 
@@ -534,7 +1067,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line104">line 104</a>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line135">line 135</a>
     </li></ul></dd>
     
 
@@ -892,7 +1425,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line167">line 167</a>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line198">line 198</a>
     </li></ul></dd>
     
 
@@ -1097,7 +1630,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Sep 22 2026 18:34:49 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Fri Oct 02 2026 14:46:06 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
