@@ -29,7 +29,7 @@
 <nav >
     
     
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="m7z.html">m7z</a><ul class='methods'><li data-type='method'><a href="m7z.html#.setProg">setProg</a></li><li data-type='method'><a href="m7z.html#.unzip">unzip</a></li><li data-type='method'><a href="m7z.html#.zipFile">zipFile</a></li><li data-type='method'><a href="m7z.html#.zipFolder">zipFolder</a></li></ul></li><li><a href="mZip.html">mZip</a><ul class='methods'><li data-type='method'><a href="mZip.html#.unzip">unzip</a></li><li data-type='method'><a href="mZip.html#.zipFile">zipFile</a></li><li data-type='method'><a href="mZip.html#.zipFolder">zipFolder</a></li></ul></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="m7z.html">m7z</a><ul class='methods'><li data-type='method'><a href="m7z.html#.setProg">setProg</a></li><li data-type='method'><a href="m7z.html#.unzip">unzip</a></li><li data-type='method'><a href="m7z.html#.zipFile">zipFile</a></li><li data-type='method'><a href="m7z.html#.zipFolder">zipFolder</a></li></ul></li><li><a href="mZip.html">mZip</a><ul class='methods'><li data-type='method'><a href="mZip.html#.listEntries">listEntries</a></li><li data-type='method'><a href="mZip.html#.readEntry">readEntry</a></li><li data-type='method'><a href="mZip.html#.unzip">unzip</a></li><li data-type='method'><a href="mZip.html#.zipFile">zipFile</a></li><li data-type='method'><a href="mZip.html#.zipFolder">zipFolder</a></li></ul></li></ul>
     
 </nav>
 
@@ -47,7 +47,7 @@
         <article>
             <pre class="prettyprint source linenums"><code>import path from 'path'
 import fs from 'fs'
-import { configure, ZipWriter, ZipReader, Uint8ArrayReader, Uint8ArrayWriter } from '@zip.js/zip.js'
+import { configure, ZipWriter, ZipReader, Reader, Uint8ArrayReader, Uint8ArrayWriter, TextWriter } from '@zip.js/zip.js'
 import get from 'lodash-es/get.js'
 import fsTreeFolder from 'wsemi/src/fsTreeFolder.mjs'
 import getFileName from 'wsemi/src/getFileName.mjs'
@@ -62,7 +62,7 @@ configure({ useWebWorkers: false }) //關閉web worker改用主執行緒壓縮, 
  * Zip處理
  *
  * @class
- * @returns {Object} 回傳壓縮物件，可使用函數zipFile、zipFolder、unzip
+ * @returns {Object} 回傳壓縮物件，可使用函數zipFile、zipFolder、unzip、listEntries、readEntry
  * @example
  * import wz from 'w-zip'
  *
@@ -109,6 +109,21 @@ configure({ useWebWorkers: false }) //關閉web worker改用主執行緒壓縮, 
  *     console.log('unzip2 with password', await wz.mZip.unzip(fpZip2PW, fpUnzipExtract + '/test2PW', { pw }))
  *     console.log('unzip2 with password after')
  *
+ *     //listEntries
+ *     console.log('listEntries before')
+ *     console.log('listEntries', (await wz.mZip.listEntries(fpZip2)).map((v) => v.filename))
+ *     console.log('listEntries after')
+ *
+ *     //readEntry
+ *     console.log('readEntry before')
+ *     console.log('readEntry', JSON.parse(await wz.mZip.readEntry(fpZip1, 'file1(中文).txt')).name)
+ *     console.log('readEntry after')
+ *
+ *     //readEntry with password
+ *     console.log('readEntry with password before')
+ *     console.log('readEntry with password', (await wz.mZip.readEntry(fpZip2PW, 'folder1/f1-1.xlsx', { type: 'u8', pw })).length)
+ *     console.log('readEntry with password after')
+ *
  * }
  * test()
  *     .catch((err) => {
@@ -133,6 +148,22 @@ configure({ useWebWorkers: false }) //關閉web worker改用主執行緒壓縮, 
  * // unzip2 with password before
  * // unzip2 with password done: test2PW
  * // unzip2 with password after
+ * // listEntries before
+ * // listEntries [
+ * //   'folder1/f1-1.xlsx',
+ * //   'folder1/f1-2.xlsx',
+ * //   'folder1/folder2/',
+ * //   'folder1/folder2/f2-1.xlsx',
+ * //   'folder1/folder2/f2-2.xlsx',
+ * //   'folder1/folder2/f2-3(中文).xlsx'
+ * // ]
+ * // listEntries after
+ * // readEntry before
+ * // readEntry w-backup
+ * // readEntry after
+ * // readEntry with password before
+ * // readEntry with password 6663
+ * // readEntry with password after
  */
 function mZip() {
 
@@ -375,10 +406,219 @@ function mZip() {
     }
 
 
+    //checkSrc, 檢查不解壓讀取之來源, 可為檔案位置字串或Buffer、Uint8Array, 有誤回傳錯誤訊息字串, 無誤回傳空字串
+    function checkSrc(src) {
+
+        //Uint8Array, Buffer亦為Uint8Array
+        if (src instanceof Uint8Array) {
+            return ''
+        }
+
+        //check
+        if (typeof src !== 'string') {
+            return 'invalid src'
+        }
+        if (!fs.existsSync(src)) {
+            return 'invalid path of source file'
+        }
+        if (!fs.lstatSync(src).isFile()) {
+            return 'path of source is not file'
+        }
+
+        return ''
+    }
+
+
+    //readZip, 開啟src之ZipReader交由fun處理, 結束時(含失敗)關閉ZipReader與檔案代號
+    async function readZip(src, readerOpt, fun) {
+
+        //reader
+        let fh = null
+        let reader
+        if (src instanceof Uint8Array) {
+            reader = new Uint8ArrayReader(src)
+        }
+        else {
+
+            //reader, 以zip.js之Reader為基底(沿用其createReadable)補上init與readUint8Array, 依位置隨機讀取檔案, 只讀中央目錄與所需項目而不載入整檔
+            reader = new Reader()
+            reader.init = async () => {
+                fh = await fs.promises.open(src, 'r')
+                reader.size = (await fh.stat()).size
+                reader.initialized = true
+            }
+            reader.readUint8Array = async (index, length) => {
+
+                //len, 依檔案實際大小夾限, 避免依異常之宣告長度配置過大緩衝區(同Uint8ArrayReader以slice夾限)
+                let len = Math.max(0, Math.min(length, reader.size - index))
+
+                //read, 迴圈讀滿以處理短讀, 讀到0位元組視為檔尾
+                let u8 = new Uint8Array(len)
+                let n = 0
+                while (n &lt; len) {
+                    let { bytesRead } = await fh.read(u8, n, len - n, index + n)
+                    if (bytesRead === 0) {
+                        break
+                    }
+                    n += bytesRead
+                }
+
+                return n &lt; len ? u8.subarray(0, n) : u8
+            }
+
+        }
+
+        //zipReader, 項目名之'\'視為路徑分隔而正規化為'/'(壓縮檔規範要求以'/'分隔, 部分工具寫入'\')
+        let zipReader = new ZipReader(reader, Object.assign({}, readerOpt, {
+            normalizeFilename: (filename) => filename.replaceAll('\\', '/'),
+        }))
+
+        try {
+            return await fun(zipReader)
+        }
+        finally {
+            try {
+                await zipReader.close()
+            }
+            finally {
+                if (fh !== null) {
+                    await fh.close()
+                }
+            }
+        }
+    }
+
+
+    /**
+     * 列出壓縮檔內項目，不解壓至資料夾
+     *
+     * 加密之壓縮檔不需密碼即可列出。含不安全路徑(例如'../'、絕對路徑、磁碟代號)項目之壓縮檔會整個reject。
+     * 項目名以'\'分隔者會正規化為'/'。項目名未標示UTF-8且無Unicode路徑欄位者(例如部分工具以Big5寫入)，依zip.js預設以CP437解碼，名稱會呈現亂碼，讀取時須使用回傳之名稱。
+     *
+     * @memberof mZip
+     * @param {String|Buffer|Uint8Array} src 輸入壓縮檔案位置字串，或壓縮檔內容之Buffer、Uint8Array，給予檔案位置時只讀取中央目錄而不載入整個檔案
+     * @returns {Promise} 回傳Promise，resolve為項目陣列，依壓縮檔中央目錄順序，各項目為{filename,directory,uncompressedSize,compressedSize,encrypted,lastModDate}，filename為壓縮檔內以'/'分隔之路徑，reject為失敗資訊
+     */
+    async function listEntries(src) {
+
+        //check
+        let errSrc = checkSrc(src)
+        if (errSrc !== '') {
+            return Promise.reject(errSrc)
+        }
+
+        try {
+
+            //entries, 轉為純物件, 不外露zip.js之entry(讀取器關閉後其getData已不可用)
+            let entries = await readZip(src, {}, async (zipReader) => {
+                let es = await zipReader.getEntries()
+                return es.map((entry) => {
+                    return {
+                        filename: entry.filename,
+                        directory: entry.directory,
+                        uncompressedSize: entry.uncompressedSize,
+                        compressedSize: entry.compressedSize,
+                        encrypted: entry.encrypted,
+                        lastModDate: entry.lastModDate,
+                    }
+                })
+            })
+
+            return entries
+        }
+        catch (err) {
+            return Promise.reject(err)
+        }
+    }
+
+
+    /**
+     * 讀取壓縮檔內單一項目，不解壓至資料夾
+     *
+     * 讀出內容會驗證CRC32，資料損毀或密碼錯誤時reject。含不安全路徑(例如'../'、絕對路徑、磁碟代號)項目之壓縮檔會整個reject。
+     *
+     * @memberof mZip
+     * @param {String|Buffer|Uint8Array} src 輸入壓縮檔案位置字串，或壓縮檔內容之Buffer、Uint8Array，給予檔案位置時只讀取中央目錄與該項目而不載入整個檔案
+     * @param {String} filename 輸入項目路徑字串，須與listEntries回傳之filename完全相同(以'/'分隔且區分大小寫)，若有同名項目則取最後一筆
+     * @param {Object} [opt={}] 輸入設定物件，預設{}
+     * @param {String} [opt.type='text'] 輸入回傳資料型態字串，可選'text'為UTF-8解碼之字串(去除BOM)、'u8'為Uint8Array，非UTF-8之文字內容請用'u8'自行解碼，預設'text'
+     * @param {String} [opt.pw=''] 輸入解壓縮密碼字串，預設''
+     * @returns {Promise} 回傳Promise，resolve為項目內容之字串或Uint8Array，reject為失敗資訊，找不到項目或項目為資料夾時亦為reject
+     */
+    async function readEntry(src, filename, opt = {}) {
+
+        //check
+        let errSrc = checkSrc(src)
+        if (errSrc !== '') {
+            return Promise.reject(errSrc)
+        }
+        if (typeof filename !== 'string' || filename === '') {
+            return Promise.reject('invalid filename')
+        }
+
+        //default
+        let type = get(opt, 'type', 'text')
+        let pw = get(opt, 'pw', '')
+
+        //check type
+        if (type !== 'text' &amp;&amp; type !== 'u8') {
+            return Promise.reject('invalid opt.type')
+        }
+
+        //check pw
+        if (typeof pw !== 'string') {
+            return Promise.reject('invalid opt.pw')
+        }
+
+        try {
+
+            //readerOpt, 驗證CRC32以免資料損毀或錯誤密碼(ZipCrypto僅以1位元組驗證密碼)時回傳錯誤內容
+            let readerOpt = { checkCrc32: true }
+            if (pw !== '') {
+                readerOpt.password = pw
+            }
+
+            //data
+            let data = await readZip(src, readerOpt, async (zipReader) => {
+
+                //entry, 同名取最後一筆, 同JSZip、node-stream-zip、Python zipfile之慣例
+                let entry = null
+                let entries = await zipReader.getEntries()
+                for (let e of entries) {
+                    if (e.filename === filename) {
+                        entry = e
+                    }
+                }
+
+                //check
+                if (entry === null) {
+                    return Promise.reject(`entry not found: ${filename}`)
+                }
+                if (entry.directory) {
+                    return Promise.reject(`entry is directory: ${filename}`)
+                }
+
+                //getData, text同zip.js之TextWriter(UTF-8且去除BOM)
+                if (type === 'u8') {
+                    return entry.getData(new Uint8ArrayWriter())
+                }
+                return entry.getData(new TextWriter())
+            })
+
+            return data
+        }
+        catch (err) {
+            return Promise.reject(err)
+        }
+    }
+
+
     return {
         zipFile,
         zipFolder,
         unzip,
+        listEntries,
+        readEntry,
     }
 }
 
@@ -398,7 +638,7 @@ export default mZip()
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Sep 22 2026 18:34:49 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Fri Oct 02 2026 14:46:06 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

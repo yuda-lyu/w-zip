@@ -45,6 +45,18 @@ async function test() {
     console.log('unzip2 with password')
     console.log(await wz.mZip.unzip(fpZip2PW, fpUnzip2PW, { pw }))
 
+    //listEntries
+    console.log('listEntries')
+    console.log((await wz.mZip.listEntries(fpZip2)).map((v) => v.filename))
+
+    //readEntry
+    console.log('readEntry')
+    console.log(JSON.parse(await wz.mZip.readEntry(fpZip1, 'file1(中文).txt')).name)
+
+    //readEntry with password
+    console.log('readEntry with password')
+    console.log((await wz.mZip.readEntry(fpZip2PW, 'folder1/f1-1.xlsx', { type: 'u8', pw })).length)
+
     console.log('finish')
 }
 test()
@@ -52,4 +64,4 @@ test()
         console.log(err)
     })
 
-//node g-zip.mjs
+//node g_zip.mjs

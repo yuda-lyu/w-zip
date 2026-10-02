@@ -56,4 +56,4 @@ test()
         console.log(err)
     })
 
-//node g-7z.mjs
+//node g_7z.mjs

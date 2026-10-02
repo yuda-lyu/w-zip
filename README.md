@@ -22,7 +22,7 @@ npm i w-zip
 ```
 
 #### Example for ZIP:
-> **Link:** [[dev source code](https://github.com/yuda-lyu/w-zip/blob/master/g-zip.mjs)]
+> **Link:** [[dev source code](https://github.com/yuda-lyu/w-zip/blob/master/g_zip.mjs)]
 ```alias
 import wz from 'w-zip'
 
@@ -69,6 +69,21 @@ async function test() {
     console.log('unzip2 with password', await wz.mZip.unzip(fpZip2PW, fpUnzipExtract + '/test2PW', { pw }))
     console.log('unzip2 with password after')
 
+    //listEntries
+    console.log('listEntries before')
+    console.log('listEntries', (await wz.mZip.listEntries(fpZip2)).map((v) => v.filename))
+    console.log('listEntries after')
+
+    //readEntry
+    console.log('readEntry before')
+    console.log('readEntry', JSON.parse(await wz.mZip.readEntry(fpZip1, 'file1(中文).txt')).name)
+    console.log('readEntry after')
+
+    //readEntry with password
+    console.log('readEntry with password before')
+    console.log('readEntry with password', (await wz.mZip.readEntry(fpZip2PW, 'folder1/f1-1.xlsx', { type: 'u8', pw })).length)
+    console.log('readEntry with password after')
+
 }
 test()
     .catch((err) => {
@@ -93,10 +108,26 @@ test()
 // unzip2 with password before
 // unzip2 with password done: test2PW
 // unzip2 with password after
+// listEntries before
+// listEntries [
+//   'folder1/f1-1.xlsx',
+//   'folder1/f1-2.xlsx',
+//   'folder1/folder2/',
+//   'folder1/folder2/f2-1.xlsx',
+//   'folder1/folder2/f2-2.xlsx',
+//   'folder1/folder2/f2-3(中文).xlsx'
+// ]
+// listEntries after
+// readEntry before
+// readEntry w-backup
+// readEntry after
+// readEntry with password before
+// readEntry with password 6663
+// readEntry with password after
 ```
 
 #### Example for 7z:
-> **Link:** [[dev source code](https://github.com/yuda-lyu/w-zip/blob/master/g-7z.mjs)]
+> **Link:** [[dev source code](https://github.com/yuda-lyu/w-zip/blob/master/g_7z.mjs)]
 ```alias
 import wz from 'w-zip'
 
