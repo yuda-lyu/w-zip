@@ -5,6 +5,7 @@ import get from 'lodash-es/get.js'
 import fsTreeFolder from 'wsemi/src/fsTreeFolder.mjs'
 import getFileName from 'wsemi/src/getFileName.mjs'
 import checkTarget from './checkTarget.mjs'
+import checkLevel from './checkLevel.mjs'
 
 
 //configure
@@ -103,6 +104,7 @@ configure({ useWebWorkers: false }) //關閉web worker改用主執行緒壓縮, 
  * // unzip2 with password after
  * // listEntries before
  * // listEntries [
+ * //   'folder1/',
  * //   'folder1/f1-1.xlsx',
  * //   'folder1/f1-2.xlsx',
  * //   'folder1/folder2/',
@@ -124,12 +126,14 @@ function mZip() {
     /**
      * 壓縮檔案
      *
+     * 壓縮檔內項目名為來源檔名。目標檔案已存在時會先刪除後重建，目標所在資料夾不存在時會自動建立。給予密碼時以ZipCrypto加密(相容Windows檔案總管)。
+     *
      * @memberof mZip
      * @param {String} fpSrc 輸入壓縮來源檔案位置字串
      * @param {String} fpTar 輸入壓縮目標檔案位置字串
      * @param {Object} [opt={}] 輸入設定物件，預設{}
-     * @param {Integer} [opt.level=9] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，預設9
-     * @param {String} [opt.pw] 輸入壓縮密碼字串，預設''
+     * @param {Integer} [opt.level=9] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，範圍外或非整數時reject且不變動既有目標，預設9
+     * @param {String} [opt.pw=''] 輸入壓縮密碼字串，預設''
      * @returns {Promise} 回傳Promise，resolve為成功資訊，reject為失敗資訊
      */
     async function zipFile(fpSrc, fpTar, opt = {}) {
@@ -142,14 +146,20 @@ function mZip() {
             return Promise.reject('path of source is not file')
         }
 
+        //default
+        let level = get(opt, 'level', 9)
+        let pw = get(opt, 'pw', '')
+
+        //check level, 須於checkTarget刪除既有目標前檢查, 參數無效時不變動目標
+        let errLevel = checkLevel(level)
+        if (errLevel !== '') {
+            return Promise.reject(new Error(errLevel))
+        }
+
         //check fpTar
         if (!checkTarget(fpTar)) {
             return Promise.reject('invalid fpSrc')
         }
-
-        //default
-        let level = get(opt, 'level', 9)
-        let pw = get(opt, 'pw', '')
 
         try {
 
@@ -189,10 +199,14 @@ function mZip() {
     /**
      * 壓縮資料夾
      *
+     * 壓縮檔內以來源資料夾名稱為根目錄(含根目錄項)，含全部子資料夾與檔案，空資料夾亦保留(來源為空資料夾時解壓後仍有根資料夾)。目標檔案已存在時會先刪除後重建，目標所在資料夾不存在時會自動建立。給予密碼時以ZipCrypto加密(相容Windows檔案總管)。
+     *
      * @memberof mZip
      * @param {String} fpSrc 輸入壓縮來源資料夾位置字串
-     * @param {String} fpTar 輸入壓縮目標資料夾位置字串
-     * @param {Integer} level 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，預設9
+     * @param {String} fpTar 輸入壓縮目標檔案位置字串
+     * @param {Object} [opt={}] 輸入設定物件，預設{}
+     * @param {Integer} [opt.level=9] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，範圍外或非整數時reject且不變動既有目標，預設9
+     * @param {String} [opt.pw=''] 輸入壓縮密碼字串，預設''
      * @returns {Promise} 回傳Promise，resolve為成功資訊，reject為失敗資訊
      */
     async function zipFolder(fpSrc, fpTar, opt = {}) {
@@ -205,14 +219,20 @@ function mZip() {
             return Promise.reject('path of source is not folder')
         }
 
+        //default
+        let level = get(opt, 'level', 9)
+        let pw = get(opt, 'pw', '')
+
+        //check level, 須於checkTarget刪除既有目標前檢查, 參數無效時不變動目標
+        let errLevel = checkLevel(level)
+        if (errLevel !== '') {
+            return Promise.reject(new Error(errLevel))
+        }
+
         //check fpTar
         if (!checkTarget(fpTar)) {
             return Promise.reject('invalid fpSrc')
         }
-
-        //default
-        let level = get(opt, 'level', 9)
-        let pw = get(opt, 'pw', '')
 
         try {
 
@@ -233,6 +253,9 @@ function mZip() {
 
             //bn, 以來源資料夾名稱為zip內根目錄(同archiver.directory(fpSrc, basename)行為)
             let bn = path.basename(fpSrc)
+
+            //root, 根目錄亦如子資料夾以目錄項保留(同7z), 來源為空資料夾時解壓後仍有根資料夾
+            await zipWriter.add(bn, undefined, { directory: true })
 
             //items, 遞迴列舉資料夾下全部檔案與子資料夾
             let items = fsTreeFolder(fpSrc, null)
@@ -277,6 +300,8 @@ function mZip() {
     /**
      * 解壓縮檔案至資料夾
      *
+     * 目標資料夾已存在時會先整個刪除再解壓(資料夾內原有檔案不保留)，目標所在資料夾不存在時會自動建立，壓縮檔無任何項目時亦建立目標資料夾。解出內容會驗證CRC32，資料損毀或密碼錯誤時reject。含不安全路徑(例如'../'、絕對路徑、磁碟代號)項目之壓縮檔會整個reject。同名項目依序寫出，以最後一筆為準。
+     *
      * @memberof mZip
      * @param {String} fpSrc 輸入解壓縮來源檔案位置字串
      * @param {String} fpTar 輸入解壓縮目標資料夾位置字串
@@ -304,8 +329,8 @@ function mZip() {
 
         try {
 
-            //readerOpt
-            let readerOpt = {}
+            //readerOpt, 驗證CRC32以免資料損毀或錯誤密碼(ZipCrypto僅以1位元組驗證密碼)時寫出錯誤內容
+            let readerOpt = { checkCrc32: true }
             if (pw !== '') {
                 readerOpt.password = pw
             }
@@ -346,6 +371,11 @@ function mZip() {
 
                 }
 
+            }
+
+            //mkdir, 壓縮檔無任何項目時仍建立目標資料夾
+            if (!fs.existsSync(fpTar)) {
+                fs.mkdirSync(fpTar, { recursive: true })
             }
 
             //close

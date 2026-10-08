@@ -110,6 +110,7 @@ test()
 // unzip2 with password after
 // listEntries before
 // listEntries [
+//   'folder1/',
 //   'folder1/f1-1.xlsx',
 //   'folder1/f1-2.xlsx',
 //   'folder1/folder2/',

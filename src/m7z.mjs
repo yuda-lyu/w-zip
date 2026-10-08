@@ -3,6 +3,7 @@ import get from 'lodash-es/get.js'
 import execProcess from 'wsemi/src/execProcess.mjs'
 import getFileName from 'wsemi/src/getFileName.mjs'
 import checkTarget from './checkTarget.mjs'
+import checkLevel from './checkLevel.mjs'
 
 
 /**
@@ -86,25 +87,28 @@ import checkTarget from './checkTarget.mjs'
  * // unzip2 with password after
  */
 function m7z() {
-    let prog = 'C:\\Program Files\\7-Zip\\7z.exe'
+    let progDefault = 'C:\\Program Files\\7-Zip\\7z.exe'
+    let prog = progDefault
 
 
     /**
      * 設定7z執行檔位置
      *
+     * 7-Zip未安裝於預設位置(例如另裝於其他磁碟或使用可攜版7za.exe)，或非Windows系統時，須先以此指定7z執行檔。
+     *
      * @memberof m7z
-     * @param {String} [path7zexe='C:\\Program Files\\7-Zip\\7z.exe'] 輸入7z執行檔位置字串，預設'C:\\Program Files\\7-Zip\\7z.exe'
-     * @returns {Object} 回傳狀態物件，執行成功物件內會提供success欄位，失敗則提供error欄位
+     * @param {String} [path7zexe='C:\\Program Files\\7-Zip\\7z.exe'] 輸入7z執行檔位置字串，可為符號連結，不給則設回預設'C:\\Program Files\\7-Zip\\7z.exe'
+     * @returns {Object} 回傳狀態物件，執行成功物件內會提供success欄位，失敗則提供error欄位且不變更既有設定
      */
-    function setProg(path7zexe) {
+    function setProg(path7zexe = progDefault) {
 
         //check
-        if (!fs.existsSync(path7zexe)) {
+        if (typeof path7zexe !== 'string' || !fs.existsSync(path7zexe)) {
             return {
                 error: 'invalid path of 7z'
             }
         }
-        if (fs.lstatSync(path7zexe).isFile()) {
+        if (!fs.statSync(path7zexe).isFile()) { //statSync會跟隨符號連結, 7z執行檔為連結時亦視為檔案
             return {
                 error: 'path of 7z is not file'
             }
@@ -125,6 +129,7 @@ function m7z() {
             fpTar,
             fpSrc,
             `-mx${level}`,
+            '-y', //非互動執行, 7z之詢問一律回答是, 避免等待輸入而永不結束
         ]
         if (pw !== '') {
             arg.push(`-p${pw}`)
@@ -137,13 +142,15 @@ function m7z() {
     /**
      * 壓縮檔案
      *
+     * 壓縮格式依目標副檔名決定(例如.7z、.zip)。目標檔案已存在時會先刪除後重建(不追加至既有壓縮檔)，目標所在資料夾不存在時會自動建立。
+     *
      * @memberof m7z
      * @param {String} fpSrc 輸入壓縮來源檔案位置字串
      * @param {String} fpTar 輸入壓縮目標檔案位置字串
      * @param {Object} [opt={}] 輸入設定物件，預設{}
-     * @param {Integer} [opt.level=1] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，預設1為最快速壓縮
+     * @param {Integer} [opt.level=1] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，範圍外或非整數時reject且不變動既有目標，預設1為最快速壓縮
      * @param {String} [opt.pw=''] 輸入壓縮密碼字串，預設''
-     * @returns {Promise} 回傳Promise，resolve為成功資訊，reject為失敗資訊
+     * @returns {Promise} 回傳Promise，resolve為物件{state,msg7z}，state為完成資訊，msg7z為7z之輸出訊息，reject為失敗資訊
      */
     async function zipFile(fpSrc, fpTar, opt = {}) {
 
@@ -155,14 +162,20 @@ function m7z() {
             return Promise.reject('path of source is not file')
         }
 
+        //default
+        let level = get(opt, 'level', 1)
+        let pw = get(opt, 'pw', '')
+
+        //check level, 須於checkTarget刪除既有目標前檢查, 參數無效時不變動目標
+        let errLevel = checkLevel(level)
+        if (errLevel !== '') {
+            return Promise.reject(new Error(errLevel))
+        }
+
         //check fpTar
         if (!checkTarget(fpTar)) {
             return Promise.reject('invalid fpSrc')
         }
-
-        //default
-        let level = get(opt, 'level', 1)
-        let pw = get(opt, 'pw', '')
 
         //r
         let error = null
@@ -186,13 +199,15 @@ function m7z() {
     /**
      * 壓縮資料夾
      *
+     * 壓縮檔內以來源資料夾名稱為根目錄，含全部子資料夾與檔案，空資料夾亦保留。壓縮格式依目標副檔名決定(例如.7z、.zip)。目標檔案已存在時會先刪除後重建(不追加至既有壓縮檔)，目標所在資料夾不存在時會自動建立。
+     *
      * @memberof m7z
      * @param {String} fpSrc 輸入壓縮來源資料夾位置字串
-     * @param {String} fpTar 輸入壓縮目標資料夾位置字串
+     * @param {String} fpTar 輸入壓縮目標檔案位置字串
      * @param {Object} [opt={}] 輸入設定物件，預設{}
-     * @param {Integer} [opt.level=1] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，預設1為最快速壓縮
-     * @param {String} [opt.pw] 輸入壓縮密碼字串，預設''
-     * @returns {Promise} 回傳Promise，resolve為成功資訊，reject為失敗資訊
+     * @param {Integer} [opt.level=1] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，範圍外或非整數時reject且不變動既有目標，預設1為最快速壓縮
+     * @param {String} [opt.pw=''] 輸入壓縮密碼字串，預設''
+     * @returns {Promise} 回傳Promise，resolve為物件{state,msg7z}，state為完成資訊，msg7z為7z之輸出訊息，reject為失敗資訊
      */
     async function zipFolder(fpSrc, fpTar, opt = {}) {
 
@@ -204,14 +219,20 @@ function m7z() {
             return Promise.reject('path of source is not folder')
         }
 
+        //default
+        let level = get(opt, 'level', 1)
+        let pw = get(opt, 'pw', '')
+
+        //check level, 須於checkTarget刪除既有目標前檢查, 參數無效時不變動目標
+        let errLevel = checkLevel(level)
+        if (errLevel !== '') {
+            return Promise.reject(new Error(errLevel))
+        }
+
         //check fpTar
         if (!checkTarget(fpTar)) {
             return Promise.reject('invalid fpSrc')
         }
-
-        //default
-        let level = get(opt, 'level', 1)
-        let pw = get(opt, 'pw', '')
 
         //r
         let error = null
@@ -235,12 +256,14 @@ function m7z() {
     /**
      * 解壓縮檔案至資料夾
      *
+     * 目標資料夾已存在時會先整個刪除再解壓(資料夾內原有檔案不保留)，目標所在資料夾不存在時會自動建立，壓縮檔無任何項目時亦建立目標資料夾。以非互動方式執行7z：加密檔未給密碼或密碼錯誤時reject，同名項目以最後一筆為準。項目路徑含'..'者由7z去除後解壓於目標資料夾內。
+     *
      * @memberof m7z
      * @param {String} fpSrc 輸入解壓縮來源檔案位置字串
      * @param {String} fpTar 輸入解壓縮目標資料夾位置字串
      * @param {Object} [opt={}] 輸入設定物件，預設{}
      * @param {String} [opt.pw=''] 輸入解壓縮密碼字串，預設''
-     * @returns {Promise} 回傳Promise，resolve為成功資訊，reject為失敗資訊
+     * @returns {Promise} 回傳Promise，resolve為物件{state,msg7z}，state為完成資訊，msg7z為7z之輸出訊息，reject為失敗資訊
      */
     async function unzip(fpSrc, fpTar, opt = {}) {
 
@@ -260,15 +283,14 @@ function m7z() {
         //default
         let pw = get(opt, 'pw', '')
 
-        //arg
+        //arg, 非互動執行: -y使同名覆寫等詢問一律回答是(同名以最後一筆為準), -p一律給予(未給密碼時為空密碼, 加密檔即失敗而不等待輸入密碼)
         let arg = [
             'x',
             fpSrc,
             '-o' + fpTar,
+            '-y',
+            `-p${pw}`,
         ]
-        if (pw !== '') {
-            arg.push(`-p${pw}`)
-        }
 
         //r
         let error = null
@@ -280,6 +302,11 @@ function m7z() {
         //check
         if (error) {
             return Promise.reject(error)
+        }
+
+        //mkdir, 壓縮檔無任何項目時仍建立目標資料夾
+        if (!fs.existsSync(fpTar)) {
+            fs.mkdirSync(fpTar, { recursive: true })
         }
 
         return {

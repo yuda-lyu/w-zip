@@ -2,46 +2,15 @@ import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
 import assert from 'assert'
-import { configure, ZipWriter, ZipReader, Uint8ArrayReader, Uint8ArrayWriter, TextReader, TextWriter } from '@zip.js/zip.js'
+import { ZipWriter, ZipReader, Uint8ArrayReader, Uint8ArrayWriter, TextReader, TextWriter } from '@zip.js/zip.js'
 import wz from '../src/WZip.mjs'
+import { makeZip, replaceName, makeSlipZip, makeDupZip, getRejection, findFalseAcceptPassword } from './tools/helpers.mjs'
 
 
-//configure, 測試自行產製特殊壓縮檔時亦關閉web worker
-configure({ useWebWorkers: false })
-
-
-//makeZip, 以zip.js產製壓縮檔, items為[項目路徑, 字串或Uint8Array]陣列
-async function makeZip(items, opt = {}) {
-    let zw = new ZipWriter(new Uint8ArrayWriter(), opt)
-    for (let [name, data] of items) {
-        let reader = typeof data === 'string' ? new TextReader(data) : new Uint8ArrayReader(data)
-        await zw.add(name, reader)
-    }
-    return zw.close()
-}
-
-
-//replaceName, 同長度替換項目名稱, 須於本地標頭與中央目錄各命中1次, 用以造出zip.js寫入端不允許之名稱
-function replaceName(u8, from, to) {
-    let buf = Buffer.from(u8)
-    let bFrom = Buffer.from(from)
-    let bTo = Buffer.from(to)
-    let n = 0
-    let i = buf.indexOf(bFrom)
-    while (i >= 0) {
-        bTo.copy(buf, i)
-        n++
-        i = buf.indexOf(bFrom, i + bTo.length)
-    }
-    assert.strict.equal(n, 2, `replaceName ${from} -> ${to} hit ${n}`)
-    return buf
-}
-
-
-//walkSrc, 由來源資料夾列出zipFolder應產生之項目(以來源資料夾名稱為根, 子資料夾為目錄項)
+//walkSrc, 由來源資料夾列出zipFolder應產生之項目(以來源資料夾名稱為根目錄項, 子資料夾為目錄項)
 function walkSrc(fdSrc) {
     let bn = path.basename(fdSrc)
-    let r = []
+    let r = [{ filename: bn + '/', directory: true }]
     let walk = (fd, rel) => {
         for (let d of fs.readdirSync(fd, { withFileTypes: true })) {
             let p = path.join(fd, d.name)
@@ -124,37 +93,6 @@ function setCdLength(u8, len) {
 }
 
 
-//findFalseAcceptPassword, 找出可通過ZipCrypto單一位元組密碼驗證之錯誤密碼(約1/256), 用以驗證錯誤密碼不會讀出亂碼
-async function findFalseAcceptPassword(u8, name) {
-    let zr = new ZipReader(new Uint8ArrayReader(u8))
-    let entry = (await zr.getEntries()).find((v) => v.filename === name)
-    let r = null
-    for (let i = 0; i < 20000 && r === null; i++) {
-        let p = `wrong${i}`
-        try {
-            await entry.getData(new Uint8ArrayWriter(), { password: p, checkPasswordOnly: true })
-            r = p
-        }
-        catch (err) {}
-    }
-    await zr.close()
-    assert.ok(r !== null, 'no false-accept password found')
-    return r
-}
-
-
-//getRejection, 取得reject值, 若resolve則測試失敗
-async function getRejection(p) {
-    try {
-        await p
-    }
-    catch (err) {
-        return err
-    }
-    assert.fail('expected reject but resolved')
-}
-
-
 describe('zipRead', function() {
 
     let fdTmp = './test/_tmp/zipRead'
@@ -213,10 +151,10 @@ describe('zipRead', function() {
         ]))
 
         //同名項目: 以dup2.txt寫入後改名為dup1.txt, 中央目錄依序為first、second
-        fs.writeFileSync(fpZipDup, replaceName(await makeZip([['dup1.txt', 'first'], ['dup2.txt', 'second']], { level: 0 }), 'dup2.txt', 'dup1.txt'))
+        fs.writeFileSync(fpZipDup, await makeDupZip())
 
         //不安全路徑: 以aa/evil.txt寫入後改名為../evil.txt
-        fs.writeFileSync(fpZipSlip, replaceName(await makeZip([['ok.txt', 'ok'], ['aa/evil.txt', 'evil']], { level: 0 }), 'aa/evil.txt', '../evil.txt'))
+        fs.writeFileSync(fpZipSlip, await makeSlipZip())
 
         //大檔: 20MB不可壓縮內容加一個小項目
         fs.writeFileSync(fpZipBig, await makeZip([['big.bin', crypto.randomBytes(20 * 1024 * 1024)], ['small.txt', 'small']], { level: 0 }))
