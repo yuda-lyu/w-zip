@@ -412,6 +412,28 @@ describe('m7z', function() {
                 assert.strict.equal(typeof r.msg7z, 'string')
             })
 
+            //規格: JSDoc「msg7z為7z之輸出訊息」, 訊息內路徑須正確呈現(含系統字碼頁以外之字元), reject訊息亦同
+            it('MZ17 msg7z與reject訊息正確呈現中文、简体與emoji路徑', async function() {
+                let nm = '中文们😀' //中文為CP950可表示, 们與😀為CP950以外之字元
+                let fd = `${fdTmp}/mz17/${nm}`
+                let fdIn = `${fd}/src${nm}`
+                let fpIn = `${fdIn}/${nm}.txt`
+                fs.mkdirSync(fdIn, { recursive: true })
+                fs.writeFileSync(fpIn, 'x')
+                let check = (msg, label) => {
+                    assert.ok(msg.includes(nm), `${label}: ${msg}`)
+                    assert.ok(!msg.includes('�'), `${label}: ${msg}`) //無解碼失敗之替代字元
+                }
+                //resolve: 壓縮訊息含目標路徑, 解壓訊息含來源路徑
+                check((await wz.m7z.zipFile(fpIn, `${fd}/f.7z`)).msg7z, 'zipFile')
+                check((await wz.m7z.zipFolder(fdIn, `${fd}/d.7z`, { pw })).msg7z, 'zipFolder')
+                check((await wz.m7z.unzip(`${fd}/d.7z`, `${fd}/out`, { pw })).msg7z, 'unzip')
+                //reject: 錯誤密碼訊息含項目名稱, 非壓縮檔訊息含來源路徑
+                check(errMsg(await getRejection(wz.m7z.unzip(`${fd}/d.7z`, `${fd}/outWrong`, { pw: 'abd' }))), 'unzip錯誤密碼')
+                check(errMsg(await getRejection(wz.m7z.unzip(fpIn, `${fd}/outBad`))), 'unzip非壓縮檔')
+                assert.strict.equal(fs.readFileSync(`${fd}/out/src${nm}/${nm}.txt`, 'utf8'), 'x')
+            })
+
             //規格: 兩種引擎產出之zip須可互相讀取, 加密方式皆為ZipCrypto
             it('MZ13 與mZip互通: m7z產zip可由mZip解壓, mZip產zip可由m7z解壓', async function() {
                 await wz.m7z.zipFolder(fdSrc, `${fdTmp}/mz13by7z.zip`, { pw })

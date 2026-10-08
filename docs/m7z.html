@@ -80,7 +80,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="m7z.mjs.html">m7z.mjs</a>, <a href="m7z.mjs.html#line88">line 88</a>
+        <a href="m7z.mjs.html">m7z.mjs</a>, <a href="m7z.mjs.html#line90">line 90</a>
     </li></ul></dd>
     
 
@@ -208,13 +208,14 @@
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>設定7z執行檔位置</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>設定7z執行檔位置</p>
+<p>7-Zip未安裝於預設位置(例如另裝於其他磁碟或使用可攜版7za.exe)，或非Windows系統時，須先以此指定7z執行檔。</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="m7z.mjs.html">m7z.mjs</a>, <a href="m7z.mjs.html#line99">line 99</a>
+        <a href="m7z.mjs.html">m7z.mjs</a>, <a href="m7z.mjs.html#line104">line 104</a>
     </li></ul></dd>
     
 
@@ -323,7 +324,7 @@
                 </td>
             
 
-            <td class="description last"><p>輸入7z執行檔位置字串，預設'C:\Program Files\7-Zip\7z.exe'</p></td>
+            <td class="description last"><p>輸入7z執行檔位置字串，可為符號連結，不給則設回預設'C:\Program Files\7-Zip\7z.exe'</p></td>
         </tr>
 
     
@@ -349,7 +350,7 @@
 
         
 <div class="param-desc">
-    <p>回傳狀態物件，執行成功物件內會提供success欄位，失敗則提供error欄位</p>
+    <p>回傳狀態物件，執行成功物件內會提供success欄位，失敗則提供error欄位且不變更既有設定</p>
 </div>
 
 
@@ -386,13 +387,14 @@
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>解壓縮檔案至資料夾</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>解壓縮檔案至資料夾</p>
+<p>先解壓至目標同層之暫存資料夾，成功後才整個取代既有目標資料夾(資料夾內原有檔案不保留)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立，壓縮檔無任何項目時亦建立目標資料夾。以非互動方式執行7z：加密檔未給密碼或密碼錯誤時reject，同名項目以最後一筆為準。項目路徑含'..'者由7z去除後解壓於目標資料夾內。</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="m7z.mjs.html">m7z.mjs</a>, <a href="m7z.mjs.html#line245">line 245</a>
+        <a href="m7z.mjs.html">m7z.mjs</a>, <a href="m7z.mjs.html#line275">line 275</a>
     </li></ul></dd>
     
 
@@ -669,7 +671,7 @@
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve為成功資訊，reject為失敗資訊</p>
+    <p>回傳Promise，resolve為物件{state,msg7z}，state為完成資訊，msg7z為7z之輸出訊息，reject為失敗資訊</p>
 </div>
 
 
@@ -706,13 +708,14 @@
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>壓縮檔案</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>壓縮檔案</p>
+<p>壓縮格式依目標副檔名決定(例如.7z、.zip，無副檔名時7z自動補'.7z')。壓縮檔先產於目標同層之暫存位置，成功後才取代既有目標(覆寫，不追加至既有壓縮檔)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立。</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="m7z.mjs.html">m7z.mjs</a>, <a href="m7z.mjs.html#line148">line 148</a>
+        <a href="m7z.mjs.html">m7z.mjs</a>, <a href="m7z.mjs.html#line172">line 172</a>
     </li></ul></dd>
     
 
@@ -956,7 +959,7 @@
                 </td>
             
 
-            <td class="description last"><p>輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，預設1為最快速壓縮</p></td>
+            <td class="description last"><p>輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，範圍外或非整數時reject且不變動既有目標，預設1為最快速壓縮</p></td>
         </tr>
 
     
@@ -1029,7 +1032,7 @@
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve為成功資訊，reject為失敗資訊</p>
+    <p>回傳Promise，resolve為物件{state,msg7z}，state為完成資訊，msg7z為7z之輸出訊息(其中壓縮檔路徑為產出時之暫存位置)，reject為失敗資訊</p>
 </div>
 
 
@@ -1066,13 +1069,14 @@
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>壓縮資料夾</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>壓縮資料夾</p>
+<p>壓縮檔內以來源資料夾名稱為根目錄，含全部子資料夾與檔案，空資料夾亦保留，目標位於來源資料夾內時不含目標本身。壓縮格式依目標副檔名決定(例如.7z、.zip，無副檔名時7z自動補'.7z')。壓縮檔先產於目標同層之暫存位置，成功後才取代既有目標(覆寫，不追加至既有壓縮檔)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立。</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="m7z.mjs.html">m7z.mjs</a>, <a href="m7z.mjs.html#line197">line 197</a>
+        <a href="m7z.mjs.html">m7z.mjs</a>, <a href="m7z.mjs.html#line224">line 224</a>
     </li></ul></dd>
     
 
@@ -1213,7 +1217,7 @@
                 </td>
             
 
-            <td class="description last"><p>輸入壓縮目標資料夾位置字串</p></td>
+            <td class="description last"><p>輸入壓縮目標檔案位置字串</p></td>
         </tr>
 
     
@@ -1316,7 +1320,7 @@
                 </td>
             
 
-            <td class="description last"><p>輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，預設1為最快速壓縮</p></td>
+            <td class="description last"><p>輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，範圍外或非整數時reject且不變動既有目標，預設1為最快速壓縮</p></td>
         </tr>
 
     
@@ -1350,6 +1354,8 @@
 
             
                 <td class="default">
+                
+                    <code>''</code>
                 
                 </td>
             
@@ -1387,7 +1393,7 @@
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve為成功資訊，reject為失敗資訊</p>
+    <p>回傳Promise，resolve為物件{state,msg7z}，state為完成資訊，msg7z為7z之輸出訊息(其中壓縮檔路徑為產出時之暫存位置)，reject為失敗資訊</p>
 </div>
 
 
@@ -1429,7 +1435,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Fri Oct 02 2026 15:37:30 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Oct 08 2026 10:15:55 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

@@ -80,7 +80,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line121">line 121</a>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line123">line 123</a>
     </li></ul></dd>
     
 
@@ -127,7 +127,7 @@
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>import wz from 'w-zip'let fpUnzip = './test/outputZip'let fpUnzipExtract = fpUnzip + '/extract'let fpSrc1 = './test/input/file1(中文).txt'let fpZip1 = fpUnzip + '/test1.zip'let fpSrc2 = './test/input/folder1'let fpZip2 = fpUnzip + '/test2.zip'let fpZip2PW = fpUnzip + '/test2PW.zip'let pw = 'abc'async function test() {    //zipFile    console.log('zipFile before')    console.log('zipFile', await wz.mZip.zipFile(fpSrc1, fpZip1))    console.log('zipFile after')    //zipFolder    console.log('zipFolder before')    console.log('zipFolder', await wz.mZip.zipFolder(fpSrc2, fpZip2))    console.log('zipFolder after')    //zipFolder with password    console.log('zipFolder with password before')    console.log('zipFolder with password', await wz.mZip.zipFolder(fpSrc2, fpZip2PW, { pw }))    console.log('zipFolder with password after')    //unzip    console.log('unzip1 before')    console.log('unzip1', await wz.mZip.unzip(fpZip1, fpUnzipExtract + '/test1'))    console.log('unzip1 after')    //unzip    console.log('unzip2 before')    console.log('unzip2', await wz.mZip.unzip(fpZip2, fpUnzipExtract + '/test2'))    console.log('unzip2 after')    //unzip with password    console.log('unzip2 with password before')    console.log('unzip2 with password', await wz.mZip.unzip(fpZip2PW, fpUnzipExtract + '/test2PW', { pw }))    console.log('unzip2 with password after')    //listEntries    console.log('listEntries before')    console.log('listEntries', (await wz.mZip.listEntries(fpZip2)).map((v) => v.filename))    console.log('listEntries after')    //readEntry    console.log('readEntry before')    console.log('readEntry', JSON.parse(await wz.mZip.readEntry(fpZip1, 'file1(中文).txt')).name)    console.log('readEntry after')    //readEntry with password    console.log('readEntry with password before')    console.log('readEntry with password', (await wz.mZip.readEntry(fpZip2PW, 'folder1/f1-1.xlsx', { type: 'u8', pw })).length)    console.log('readEntry with password after')}test()    .catch((err) => {        console.log(err)    })// zipFile before// zipFile done: test1.zip// zipFile after// zipFolder before// zipFolder done: test2.zip// zipFolder after// zipFolder with password before// zipFolder with password done: test2PW.zip// zipFolder with password after// unzip1 before// unzip1 done: test1// unzip1 after// unzip2 before// unzip2 done: test2// unzip2 after// unzip2 with password before// unzip2 with password done: test2PW// unzip2 with password after// listEntries before// listEntries [//   'folder1/f1-1.xlsx',//   'folder1/f1-2.xlsx',//   'folder1/folder2/',//   'folder1/folder2/f2-1.xlsx',//   'folder1/folder2/f2-2.xlsx',//   'folder1/folder2/f2-3(中文).xlsx'// ]// listEntries after// readEntry before// readEntry w-backup// readEntry after// readEntry with password before// readEntry with password 6663// readEntry with password after</code></pre>
+    <pre class="prettyprint"><code>import wz from 'w-zip'let fpUnzip = './test/outputZip'let fpUnzipExtract = fpUnzip + '/extract'let fpSrc1 = './test/input/file1(中文).txt'let fpZip1 = fpUnzip + '/test1.zip'let fpSrc2 = './test/input/folder1'let fpZip2 = fpUnzip + '/test2.zip'let fpZip2PW = fpUnzip + '/test2PW.zip'let pw = 'abc'async function test() {    //zipFile    console.log('zipFile before')    console.log('zipFile', await wz.mZip.zipFile(fpSrc1, fpZip1))    console.log('zipFile after')    //zipFolder    console.log('zipFolder before')    console.log('zipFolder', await wz.mZip.zipFolder(fpSrc2, fpZip2))    console.log('zipFolder after')    //zipFolder with password    console.log('zipFolder with password before')    console.log('zipFolder with password', await wz.mZip.zipFolder(fpSrc2, fpZip2PW, { pw }))    console.log('zipFolder with password after')    //unzip    console.log('unzip1 before')    console.log('unzip1', await wz.mZip.unzip(fpZip1, fpUnzipExtract + '/test1'))    console.log('unzip1 after')    //unzip    console.log('unzip2 before')    console.log('unzip2', await wz.mZip.unzip(fpZip2, fpUnzipExtract + '/test2'))    console.log('unzip2 after')    //unzip with password    console.log('unzip2 with password before')    console.log('unzip2 with password', await wz.mZip.unzip(fpZip2PW, fpUnzipExtract + '/test2PW', { pw }))    console.log('unzip2 with password after')    //listEntries    console.log('listEntries before')    console.log('listEntries', (await wz.mZip.listEntries(fpZip2)).map((v) => v.filename))    console.log('listEntries after')    //readEntry    console.log('readEntry before')    console.log('readEntry', JSON.parse(await wz.mZip.readEntry(fpZip1, 'file1(中文).txt')).name)    console.log('readEntry after')    //readEntry with password    console.log('readEntry with password before')    console.log('readEntry with password', (await wz.mZip.readEntry(fpZip2PW, 'folder1/f1-1.xlsx', { type: 'u8', pw })).length)    console.log('readEntry with password after')}test()    .catch((err) => {        console.log(err)    })// zipFile before// zipFile done: test1.zip// zipFile after// zipFolder before// zipFolder done: test2.zip// zipFolder after// zipFolder with password before// zipFolder with password done: test2PW.zip// zipFolder with password after// unzip1 before// unzip1 done: test1// unzip1 after// unzip2 before// unzip2 done: test2// unzip2 after// unzip2 with password before// unzip2 with password done: test2PW// unzip2 with password after// listEntries before// listEntries [//   'folder1/',//   'folder1/f1-1.xlsx',//   'folder1/f1-2.xlsx',//   'folder1/folder2/',//   'folder1/folder2/f2-1.xlsx',//   'folder1/folder2/f2-2.xlsx',//   'folder1/folder2/f2-3(中文).xlsx'// ]// listEntries after// readEntry before// readEntry w-backup// readEntry after// readEntry with password before// readEntry with password 6663// readEntry with password after</code></pre>
 
 
 
@@ -216,7 +216,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line455">line 455</a>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line478">line 478</a>
     </li></ul></dd>
     
 
@@ -381,7 +381,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line501">line 501</a>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line524">line 524</a>
     </li></ul></dd>
     
 
@@ -741,13 +741,14 @@
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>解壓縮檔案至資料夾</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>解壓縮檔案至資料夾</p>
+<p>先解壓至目標同層之暫存資料夾，成功後才整個取代既有目標資料夾(資料夾內原有檔案不保留)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立，壓縮檔無任何項目時亦建立目標資料夾。解出內容會驗證CRC32，資料損毀或密碼錯誤時reject。含不安全路徑(例如'../'、絕對路徑、磁碟代號)項目之壓縮檔會整個reject。同名項目依序寫出，以最後一筆為準。</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line287">line 287</a>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line307">line 307</a>
     </li></ul></dd>
     
 
@@ -1061,13 +1062,14 @@
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>壓縮檔案</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>壓縮檔案</p>
+<p>壓縮檔內項目名為來源檔名。壓縮檔先產於目標同層之暫存位置，成功後才取代既有目標(覆寫)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立。給予密碼時以ZipCrypto加密(相容Windows檔案總管)。</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line135">line 135</a>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line139">line 139</a>
     </li></ul></dd>
     
 
@@ -1311,7 +1313,7 @@
                 </td>
             
 
-            <td class="description last"><p>輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，預設9</p></td>
+            <td class="description last"><p>輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，範圍外或非整數時reject且不變動既有目標，預設9</p></td>
         </tr>
 
     
@@ -1345,6 +1347,8 @@
 
             
                 <td class="default">
+                
+                    <code>''</code>
                 
                 </td>
             
@@ -1409,7 +1413,7 @@
 
     
 
-    <h4 class="name" id=".zipFolder"><span class="type-signature type-signature-async, static">(async, static) </span>zipFolder<span class="signature">(fpSrc, fpTar, level)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    <h4 class="name" id=".zipFolder"><span class="type-signature type-signature-async, static">(async, static) </span>zipFolder<span class="signature">(fpSrc, fpTar, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
 
     
 
@@ -1419,13 +1423,14 @@
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>壓縮資料夾</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>壓縮資料夾</p>
+<p>壓縮檔內以來源資料夾名稱為根目錄(含根目錄項)，含全部子資料夾與檔案，空資料夾亦保留(來源為空資料夾時解壓後仍有根資料夾)，目標位於來源資料夾內時不含目標本身。壓縮檔先產於目標同層之暫存位置，成功後才取代既有目標(覆寫)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立。給予密碼時以ZipCrypto加密(相容Windows檔案總管)。</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line198">line 198</a>
+        <a href="mZip.mjs.html">mZip.mjs</a>, <a href="mZip.mjs.html#line207">line 207</a>
     </li></ul></dd>
     
 
@@ -1485,7 +1490,11 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -1511,7 +1520,19 @@
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入壓縮來源資料夾位置字串</p></td>
@@ -1535,12 +1556,87 @@
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>輸入壓縮目標資料夾位置字串</p></td>
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入壓縮目標檔案位置字串</p></td>
         </tr>
 
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
     
 
         <tr>
@@ -1559,10 +1655,73 @@
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，預設9</p></td>
+            
+                <td class="default">
+                
+                    <code>9</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，範圍外或非整數時reject且不變動既有目標，預設9</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pw</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>''</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入壓縮密碼字串，預設''</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -1630,7 +1789,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Fri Oct 02 2026 15:37:30 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Oct 08 2026 10:15:55 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

@@ -131,6 +131,7 @@ function m7z() {
             fpSrc,
             `-mx${level}`,
             '-y', //非互動執行, 7z之詢問一律回答是, 避免等待輸入而永不結束
+            '-sccUTF-8', //7z訊息以UTF-8輸出, 7z預設用系統字碼頁(例如CP950)致路徑亂碼, 且其無法表示之字元(简体、emoji)會被換成'_'
             ...excludes,
         ]
         if (pw !== '') {
@@ -166,7 +167,7 @@ function m7z() {
      * @param {Object} [opt={}] 輸入設定物件，預設{}
      * @param {Integer} [opt.level=1] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，範圍外或非整數時reject且不變動既有目標，預設1為最快速壓縮
      * @param {String} [opt.pw=''] 輸入壓縮密碼字串，預設''
-     * @returns {Promise} 回傳Promise，resolve為物件{state,msg7z}，state為完成資訊，msg7z為7z之輸出訊息，reject為失敗資訊
+     * @returns {Promise} 回傳Promise，resolve為物件{state,msg7z}，state為完成資訊，msg7z為7z之輸出訊息(其中壓縮檔路徑為產出時之暫存位置)，reject為失敗資訊
      */
     async function zipFile(fpSrc, fpTar, opt = {}) {
 
@@ -218,7 +219,7 @@ function m7z() {
      * @param {Object} [opt={}] 輸入設定物件，預設{}
      * @param {Integer} [opt.level=1] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，範圍外或非整數時reject且不變動既有目標，預設1為最快速壓縮
      * @param {String} [opt.pw=''] 輸入壓縮密碼字串，預設''
-     * @returns {Promise} 回傳Promise，resolve為物件{state,msg7z}，state為完成資訊，msg7z為7z之輸出訊息，reject為失敗資訊
+     * @returns {Promise} 回傳Promise，resolve為物件{state,msg7z}，state為完成資訊，msg7z為7z之輸出訊息(其中壓縮檔路徑為產出時之暫存位置)，reject為失敗資訊
      */
     async function zipFolder(fpSrc, fpTar, opt = {}) {
 
@@ -291,13 +292,14 @@ function m7z() {
             //mkdir, 壓縮檔無任何項目時仍有目標資料夾
             fs.mkdirSync(fdOut, { recursive: true })
 
-            //arg, 非互動執行: -y使同名覆寫等詢問一律回答是(同名以最後一筆為準), -p一律給予(未給密碼時為空密碼, 加密檔即失敗而不等待輸入密碼)
+            //arg, 非互動執行: -y使同名覆寫等詢問一律回答是(同名以最後一筆為準), -p一律給予(未給密碼時為空密碼, 加密檔即失敗而不等待輸入密碼); -sccUTF-8使7z訊息以UTF-8輸出(同zip)
             let arg = [
                 'x',
                 fpSrc,
                 '-o' + fdOut,
                 '-y',
                 `-p${pw}`,
+                '-sccUTF-8',
             ]
 
             return execProcess(prog, arg)
