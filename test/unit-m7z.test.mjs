@@ -124,6 +124,144 @@ describe('m7z', function() {
 
         })
 
+        describe('目標處理', function() {
+
+            //listWzip, 列出資料夾內暫存或備份(名稱含.wzip-)之項目
+            let listWzip = (fd) => fs.readdirSync(fd).filter((v) => v.includes('.wzip-'))
+
+            afterEach(function() {
+                wz.m7z.setProg()
+            })
+
+            //規格: JSDoc「操作失敗時不變動既有目標」
+            it('TG01 操作中失敗時既有目標不變', async function() {
+                let fd = `${fdTmp}/tg01`
+                fs.mkdirSync(fd, { recursive: true })
+                assert.ok(wz.m7z.setProg(fpFake).success) //執行檔設為非執行檔, 使7z執行失敗
+                for (let fun of [(t) => wz.m7z.zipFile(fpTxt, t), (t) => wz.m7z.zipFolder(fdSrc, t)]) {
+                    let fp = `${fd}/exist.7z`
+                    fs.writeFileSync(fp, 'existing')
+                    assert.ok(await getRejection(fun(fp)))
+                    assert.strict.equal(fs.readFileSync(fp, 'utf8'), 'existing')
+                }
+                wz.m7z.setProg()
+                let fpPW = `${fd}/pw.7z`
+                await wz.m7z.zipFolder(fdSrc, fpPW, { pw })
+                for (let [src, opt] of [[fpTxt, {}], [fpPW, { pw: 'abd' }]]) {
+                    let fdOut = `${fd}/existDir`
+                    fs.rmSync(fdOut, { recursive: true, force: true })
+                    fs.mkdirSync(fdOut, { recursive: true })
+                    fs.writeFileSync(`${fdOut}/keep.txt`, 'keep')
+                    assert.ok(await getRejection(wz.m7z.unzip(src, fdOut, opt)), src)
+                    assert.strict.deepEqual(treeOf(fdOut), ['keep.txt'], src)
+                }
+            })
+
+            //規格: 暫存與備份僅於操作期間存在
+            it('TG02 成功或失敗後目標同層無暫存或備份殘留', async function() {
+                let fd = `${fdTmp}/tg02`
+                fs.mkdirSync(fd, { recursive: true })
+                await wz.m7z.zipFile(fpTxt, `${fd}/a.7z`)
+                await wz.m7z.zipFile(fpTxt, `${fd}/a.7z`)
+                await wz.m7z.zipFolder(fdSrc, `${fd}/b.zip`)
+                await wz.m7z.unzip(`${fd}/b.zip`, `${fd}/out`)
+                await wz.m7z.unzip(`${fd}/b.zip`, `${fd}/out`)
+                await getRejection(wz.m7z.unzip(fpTxt, `${fd}/out`))
+                assert.strict.deepEqual(listWzip(fd), [])
+                assertSameTree(fdSrc, `${fd}/out/srcTree`)
+            })
+
+            //規格: fpTar須為非空字串
+            it('TG03 fpTar非字串或空字串時reject', async function() {
+                let fp7z = `${fdTmp}/tg03.7z`
+                await wz.m7z.zipFile(fpTxt, fp7z)
+                for (let t of [undefined, null, 123, '']) {
+                    assert.strict.equal(await getRejection(wz.m7z.zipFile(fpTxt, t)), 'invalid fpTar', String(t))
+                    assert.strict.equal(await getRejection(wz.m7z.zipFolder(fdSrc, t)), 'invalid fpTar', String(t))
+                    assert.strict.equal(await getRejection(wz.m7z.unzip(fp7z, t)), 'invalid fpTar', String(t))
+                }
+            })
+
+            //規格: 以結果取代既有目標失敗時須還原既有目標
+            it('TG04 以結果取代既有目標之改名失敗時還原既有目標', async function() {
+                let fd = `${fdTmp}/tg04`
+                fs.mkdirSync(fd, { recursive: true })
+                let fp = `${fd}/a.7z`
+                fs.writeFileSync(fp, 'existing')
+                let rename0 = fs.renameSync
+                fs.renameSync = (a, b) => {
+                    if (path.resolve(String(b)) === path.resolve(fp) && !String(a).includes('.wzip-old-')) {
+                        throw new Error('mock rename failure') //僅擋「產物改名為目標」, 備份與還原照常
+                    }
+                    return rename0(a, b)
+                }
+                let err
+                try {
+                    err = await getRejection(wz.m7z.zipFile(fpTxt, fp))
+                }
+                finally {
+                    fs.renameSync = rename0
+                }
+                assert.match(errMsg(err), /mock rename failure/)
+                assert.strict.equal(fs.readFileSync(fp, 'utf8'), 'existing')
+                assert.strict.deepEqual(listWzip(fd), [])
+            })
+
+            //規格: JSDoc「目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)」
+            it('TG07 目標為來源本身、來源之上層或工作目錄時reject且皆不變動', async function() {
+                let fd = `${fdTmp}/tg07`
+                let fdBox = `${fd}/box`
+                fs.mkdirSync(fdBox, { recursive: true })
+                let fp7z = `${fdBox}/a.7z`
+                await wz.m7z.zipFile(fpTxt, fp7z)
+                assert.strict.equal(await getRejection(wz.m7z.unzip(fp7z, fdBox)), 'unsafe fpTar') //解壓至壓縮檔所在資料夾
+                assert.strict.equal(await getRejection(wz.m7z.zipFile(fp7z, fp7z)), 'unsafe fpTar')
+                assert.strict.equal(await getRejection(wz.m7z.zipFolder(fdBox, fdBox)), 'unsafe fpTar')
+                assert.strict.equal(await getRejection(wz.m7z.zipFolder(fdBox, fd)), 'unsafe fpTar')
+                assert.strict.deepEqual(treeOf(fd), ['box/', 'box/a.7z'])
+                //工作目錄: 於沙箱資料夾切換工作目錄後以'.'為目標, 來源位於沙箱外
+                let fdSandbox = path.resolve(fd, 'sandbox')
+                fs.mkdirSync(fdSandbox, { recursive: true })
+                fs.writeFileSync(path.join(fdSandbox, 'keep.txt'), 'keep')
+                let fp7zAbs = path.resolve(fp7z)
+                let cwd0 = process.cwd()
+                let errs = []
+                process.chdir(fdSandbox)
+                try {
+                    errs.push(await getRejection(wz.m7z.unzip(fp7zAbs, '.')))
+                    errs.push(await getRejection(wz.m7z.zipFile(fp7zAbs, '.')))
+                }
+                finally {
+                    process.chdir(cwd0)
+                }
+                assert.strict.deepEqual(errs, ['unsafe fpTar', 'unsafe fpTar'])
+                assert.strict.deepEqual(treeOf(fdSandbox), ['keep.txt'])
+            })
+
+            //規格: JSDoc「目標位於來源資料夾內時不含目標本身」(與修改前先刪除目標再壓縮之結果相同)
+            it('TG08 目標位於來源資料夾內時壓縮檔不含目標本身與暫存', async function() {
+                let fdBox = `${fdTmp}/tg08/box`
+                fs.mkdirSync(fdBox, { recursive: true })
+                fs.writeFileSync(`${fdBox}/a.txt`, 'aaa')
+                let fpInner = `${fdBox}/inner.7z`
+                await wz.m7z.zipFolder(fdBox, fpInner)
+                await wz.m7z.zipFolder(fdBox, fpInner) //第二次時目標已存在於來源內
+                await wz.m7z.unzip(fpInner, `${fdTmp}/tg08/out`)
+                assert.strict.deepEqual(treeOf(`${fdTmp}/tg08/out`), ['box/', 'box/a.txt'])
+            })
+
+            //規格: 目標無副檔名時沿用7z之命名(自動補.7z), 與修改前相同
+            it('TG06 目標無副檔名時產生目標.7z', async function() {
+                let fd = `${fdTmp}/tg06`
+                fs.mkdirSync(fd, { recursive: true })
+                await wz.m7z.zipFile(fpTxt, `${fd}/archive`)
+                assert.strict.deepEqual(fs.readdirSync(fd), ['archive.7z'])
+                await wz.m7z.unzip(`${fd}/archive.7z`, `${fd}/out`)
+                assert.strict.equal(sha(`${fd}/out/a.txt`), sha(fpTxt))
+            })
+
+        })
+
         describe('zipFile、zipFolder、unzip', function() {
 
             before(function() {

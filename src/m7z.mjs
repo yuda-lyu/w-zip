@@ -1,9 +1,10 @@
 import fs from 'fs'
+import path from 'path'
 import get from 'lodash-es/get.js'
 import execProcess from 'wsemi/src/execProcess.mjs'
 import getFileName from 'wsemi/src/getFileName.mjs'
-import checkTarget from './checkTarget.mjs'
 import checkLevel from './checkLevel.mjs'
+import replaceTarget, { isSameOrInside } from './replaceTarget.mjs'
 
 
 /**
@@ -123,13 +124,14 @@ function m7z() {
     }
 
 
-    async function zip(fpSrc, fpTar, level = 1, pw = '') { //7z的-mx1為最快速壓縮(mx0為不壓縮)
+    async function zip(fpSrc, fpTar, level = 1, pw = '', excludes = []) { //7z的-mx1為最快速壓縮(mx0為不壓縮)
         let arg = [
             'a',
             fpTar,
             fpSrc,
             `-mx${level}`,
             '-y', //非互動執行, 7z之詢問一律回答是, 避免等待輸入而永不結束
+            ...excludes,
         ]
         if (pw !== '') {
             arg.push(`-p${pw}`)
@@ -139,10 +141,24 @@ function m7z() {
     }
 
 
+    //getExcludes, 目標位於來源資料夾內時, 以7z之排除參數排除暫存資料夾與既有目標(與先刪除目標再壓縮之結果相同)
+    function getExcludes(fpSrc, fpTar, fpOut) {
+        let fdSrc = path.resolve(fpSrc)
+        let fpTarAbs = path.resolve(fpTar)
+        if (!isSameOrInside(fpTarAbs, fdSrc)) {
+            return []
+        }
+        return [
+            `-xr!${path.basename(path.dirname(fpOut))}`, //暫存資料夾名稱含亂數, 遞迴排除不會誤排他檔
+            `-x!${path.relative(path.dirname(fdSrc), fpTarAbs)}`, //既有目標, 以壓縮檔內路徑排除
+        ]
+    }
+
+
     /**
      * 壓縮檔案
      *
-     * 壓縮格式依目標副檔名決定(例如.7z、.zip)。目標檔案已存在時會先刪除後重建(不追加至既有壓縮檔)，目標所在資料夾不存在時會自動建立。
+     * 壓縮格式依目標副檔名決定(例如.7z、.zip，無副檔名時7z自動補'.7z')。壓縮檔先產於目標同層之暫存位置，成功後才取代既有目標(覆寫，不追加至既有壓縮檔)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立。
      *
      * @memberof m7z
      * @param {String} fpSrc 輸入壓縮來源檔案位置字串
@@ -166,20 +182,15 @@ function m7z() {
         let level = get(opt, 'level', 1)
         let pw = get(opt, 'pw', '')
 
-        //check level, 須於checkTarget刪除既有目標前檢查, 參數無效時不變動目標
+        //check level
         let errLevel = checkLevel(level)
         if (errLevel !== '') {
             return Promise.reject(new Error(errLevel))
         }
 
-        //check fpTar
-        if (!checkTarget(fpTar)) {
-            return Promise.reject('invalid fpSrc')
-        }
-
-        //r
+        //r, 於目標同層暫存產出, 成功後才取代目標, 失敗時不變動既有目標
         let error = null
-        let r = await zip(fpSrc, fpTar, level, pw)
+        let r = await replaceTarget(fpTar, fpSrc, (fpOut) => zip(fpSrc, fpOut, level, pw))
             .catch((err) => {
                 error = err
             })
@@ -199,7 +210,7 @@ function m7z() {
     /**
      * 壓縮資料夾
      *
-     * 壓縮檔內以來源資料夾名稱為根目錄，含全部子資料夾與檔案，空資料夾亦保留。壓縮格式依目標副檔名決定(例如.7z、.zip)。目標檔案已存在時會先刪除後重建(不追加至既有壓縮檔)，目標所在資料夾不存在時會自動建立。
+     * 壓縮檔內以來源資料夾名稱為根目錄，含全部子資料夾與檔案，空資料夾亦保留，目標位於來源資料夾內時不含目標本身。壓縮格式依目標副檔名決定(例如.7z、.zip，無副檔名時7z自動補'.7z')。壓縮檔先產於目標同層之暫存位置，成功後才取代既有目標(覆寫，不追加至既有壓縮檔)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立。
      *
      * @memberof m7z
      * @param {String} fpSrc 輸入壓縮來源資料夾位置字串
@@ -223,20 +234,15 @@ function m7z() {
         let level = get(opt, 'level', 1)
         let pw = get(opt, 'pw', '')
 
-        //check level, 須於checkTarget刪除既有目標前檢查, 參數無效時不變動目標
+        //check level
         let errLevel = checkLevel(level)
         if (errLevel !== '') {
             return Promise.reject(new Error(errLevel))
         }
 
-        //check fpTar
-        if (!checkTarget(fpTar)) {
-            return Promise.reject('invalid fpSrc')
-        }
-
-        //r
+        //r, 於目標同層暫存產出, 成功後才取代目標, 失敗時不變動既有目標
         let error = null
-        let r = await zip(fpSrc, fpTar, level, pw)
+        let r = await replaceTarget(fpTar, fpSrc, (fpOut) => zip(fpSrc, fpOut, level, pw, getExcludes(fpSrc, fpTar, fpOut)))
             .catch((err) => {
                 error = err
             })
@@ -256,7 +262,7 @@ function m7z() {
     /**
      * 解壓縮檔案至資料夾
      *
-     * 目標資料夾已存在時會先整個刪除再解壓(資料夾內原有檔案不保留)，目標所在資料夾不存在時會自動建立，壓縮檔無任何項目時亦建立目標資料夾。以非互動方式執行7z：加密檔未給密碼或密碼錯誤時reject，同名項目以最後一筆為準。項目路徑含'..'者由7z去除後解壓於目標資料夾內。
+     * 先解壓至目標同層之暫存資料夾，成功後才整個取代既有目標資料夾(資料夾內原有檔案不保留)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立，壓縮檔無任何項目時亦建立目標資料夾。以非互動方式執行7z：加密檔未給密碼或密碼錯誤時reject，同名項目以最後一筆為準。項目路徑含'..'者由7z去除後解壓於目標資料夾內。
      *
      * @memberof m7z
      * @param {String} fpSrc 輸入解壓縮來源檔案位置字串
@@ -275,26 +281,27 @@ function m7z() {
             return Promise.reject('path of source is not file')
         }
 
-        //check fpTar
-        if (!checkTarget(fpTar)) {
-            return Promise.reject('invalid fpSrc')
-        }
-
         //default
         let pw = get(opt, 'pw', '')
 
-        //arg, 非互動執行: -y使同名覆寫等詢問一律回答是(同名以最後一筆為準), -p一律給予(未給密碼時為空密碼, 加密檔即失敗而不等待輸入密碼)
-        let arg = [
-            'x',
-            fpSrc,
-            '-o' + fpTar,
-            '-y',
-            `-p${pw}`,
-        ]
-
-        //r
+        //r, 於目標同層暫存資料夾解壓, 成功後才取代目標, 失敗時不變動既有目標
         let error = null
-        let r = await execProcess(prog, arg)
+        let r = await replaceTarget(fpTar, fpSrc, (fdOut) => {
+
+            //mkdir, 壓縮檔無任何項目時仍有目標資料夾
+            fs.mkdirSync(fdOut, { recursive: true })
+
+            //arg, 非互動執行: -y使同名覆寫等詢問一律回答是(同名以最後一筆為準), -p一律給予(未給密碼時為空密碼, 加密檔即失敗而不等待輸入密碼)
+            let arg = [
+                'x',
+                fpSrc,
+                '-o' + fdOut,
+                '-y',
+                `-p${pw}`,
+            ]
+
+            return execProcess(prog, arg)
+        })
             .catch((err) => {
                 error = err.toString()
             })
@@ -302,11 +309,6 @@ function m7z() {
         //check
         if (error) {
             return Promise.reject(error)
-        }
-
-        //mkdir, 壓縮檔無任何項目時仍建立目標資料夾
-        if (!fs.existsSync(fpTar)) {
-            fs.mkdirSync(fpTar, { recursive: true })
         }
 
         return {

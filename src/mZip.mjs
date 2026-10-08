@@ -4,8 +4,8 @@ import { configure, ZipWriter, ZipReader, Reader, Uint8ArrayReader, Uint8ArrayWr
 import get from 'lodash-es/get.js'
 import fsTreeFolder from 'wsemi/src/fsTreeFolder.mjs'
 import getFileName from 'wsemi/src/getFileName.mjs'
-import checkTarget from './checkTarget.mjs'
 import checkLevel from './checkLevel.mjs'
+import replaceTarget, { isSameOrInside } from './replaceTarget.mjs'
 
 
 //configure
@@ -126,7 +126,7 @@ function mZip() {
     /**
      * 壓縮檔案
      *
-     * 壓縮檔內項目名為來源檔名。目標檔案已存在時會先刪除後重建，目標所在資料夾不存在時會自動建立。給予密碼時以ZipCrypto加密(相容Windows檔案總管)。
+     * 壓縮檔內項目名為來源檔名。壓縮檔先產於目標同層之暫存位置，成功後才取代既有目標(覆寫)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立。給予密碼時以ZipCrypto加密(相容Windows檔案總管)。
      *
      * @memberof mZip
      * @param {String} fpSrc 輸入壓縮來源檔案位置字串
@@ -150,43 +150,38 @@ function mZip() {
         let level = get(opt, 'level', 9)
         let pw = get(opt, 'pw', '')
 
-        //check level, 須於checkTarget刪除既有目標前檢查, 參數無效時不變動目標
+        //check level
         let errLevel = checkLevel(level)
         if (errLevel !== '') {
             return Promise.reject(new Error(errLevel))
         }
 
-        //check fpTar
-        if (!checkTarget(fpTar)) {
-            return Promise.reject('invalid fpSrc')
-        }
-
         try {
 
-            //check
-            if (!fs.existsSync(path.dirname(fpTar))) {
-                fs.mkdirSync(path.dirname(fpTar), { recursive: true })
-            }
+            //replaceTarget, 於目標同層暫存產出, 成功後才取代目標, 失敗時不變動既有目標
+            await replaceTarget(fpTar, fpSrc, async (fpOut) => {
 
-            //zipOpt
-            let zipOpt = { level }
-            if (pw !== '') {
-                zipOpt.password = pw
-                zipOpt.zipCrypto = true //使用ZipCrypto(即zip20)加密維持與舊版相同相容性, 若需更強加密可改為encryptionStrength: 3(AES-256)
-            }
+                //zipOpt
+                let zipOpt = { level }
+                if (pw !== '') {
+                    zipOpt.password = pw
+                    zipOpt.zipCrypto = true //使用ZipCrypto(即zip20)加密維持與舊版相同相容性, 若需更強加密可改為encryptionStrength: 3(AES-256)
+                }
 
-            //zipWriter
-            let zipWriter = new ZipWriter(new Uint8ArrayWriter(), zipOpt)
+                //zipWriter
+                let zipWriter = new ZipWriter(new Uint8ArrayWriter(), zipOpt)
 
-            //add
-            let b = fs.readFileSync(fpSrc)
-            await zipWriter.add(path.basename(fpSrc), new Uint8ArrayReader(b))
+                //add
+                let b = fs.readFileSync(fpSrc)
+                await zipWriter.add(path.basename(fpSrc), new Uint8ArrayReader(b))
 
-            //close
-            let u8 = await zipWriter.close()
+                //close
+                let u8 = await zipWriter.close()
 
-            //writeFileSync
-            fs.writeFileSync(fpTar, u8)
+                //writeFileSync
+                fs.writeFileSync(fpOut, u8)
+
+            })
 
             return Promise.resolve('done: ' + fpTar)
         }
@@ -199,7 +194,7 @@ function mZip() {
     /**
      * 壓縮資料夾
      *
-     * 壓縮檔內以來源資料夾名稱為根目錄(含根目錄項)，含全部子資料夾與檔案，空資料夾亦保留(來源為空資料夾時解壓後仍有根資料夾)。目標檔案已存在時會先刪除後重建，目標所在資料夾不存在時會自動建立。給予密碼時以ZipCrypto加密(相容Windows檔案總管)。
+     * 壓縮檔內以來源資料夾名稱為根目錄(含根目錄項)，含全部子資料夾與檔案，空資料夾亦保留(來源為空資料夾時解壓後仍有根資料夾)，目標位於來源資料夾內時不含目標本身。壓縮檔先產於目標同層之暫存位置，成功後才取代既有目標(覆寫)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立。給予密碼時以ZipCrypto加密(相容Windows檔案總管)。
      *
      * @memberof mZip
      * @param {String} fpSrc 輸入壓縮來源資料夾位置字串
@@ -223,71 +218,71 @@ function mZip() {
         let level = get(opt, 'level', 9)
         let pw = get(opt, 'pw', '')
 
-        //check level, 須於checkTarget刪除既有目標前檢查, 參數無效時不變動目標
+        //check level
         let errLevel = checkLevel(level)
         if (errLevel !== '') {
             return Promise.reject(new Error(errLevel))
         }
 
-        //check fpTar
-        if (!checkTarget(fpTar)) {
-            return Promise.reject('invalid fpSrc')
-        }
-
         try {
 
-            //check
-            if (!fs.existsSync(path.dirname(fpTar))) {
-                fs.mkdirSync(path.dirname(fpTar), { recursive: true })
-            }
+            //replaceTarget, 於目標同層暫存產出, 成功後才取代目標, 失敗時不變動既有目標
+            await replaceTarget(fpTar, fpSrc, async (fpOut) => {
 
-            //zipOpt
-            let zipOpt = { level }
-            if (pw !== '') {
-                zipOpt.password = pw
-                zipOpt.zipCrypto = true //使用ZipCrypto(即zip20)加密維持與舊版相同相容性, 若需更強加密可改為encryptionStrength: 3(AES-256)
-            }
-
-            //zipWriter
-            let zipWriter = new ZipWriter(new Uint8ArrayWriter(), zipOpt)
-
-            //bn, 以來源資料夾名稱為zip內根目錄(同archiver.directory(fpSrc, basename)行為)
-            let bn = path.basename(fpSrc)
-
-            //root, 根目錄亦如子資料夾以目錄項保留(同7z), 來源為空資料夾時解壓後仍有根資料夾
-            await zipWriter.add(bn, undefined, { directory: true })
-
-            //items, 遞迴列舉資料夾下全部檔案與子資料夾
-            let items = fsTreeFolder(fpSrc, null)
-
-            //add
-            for (let item of items) {
-
-                //name, zip內相對路徑統一用'/'
-                let rel = path.relative(fpSrc, item.path)
-                let name = path.join(bn, rel).replaceAll('\\', '/')
-
-                if (item.isFolder) {
-
-                    //directory, 保留空資料夾結構
-                    await zipWriter.add(name, undefined, { directory: true })
-
-                }
-                else {
-
-                    //file
-                    let b = fs.readFileSync(item.path)
-                    await zipWriter.add(name, new Uint8ArrayReader(b))
-
+                //zipOpt
+                let zipOpt = { level }
+                if (pw !== '') {
+                    zipOpt.password = pw
+                    zipOpt.zipCrypto = true //使用ZipCrypto(即zip20)加密維持與舊版相同相容性, 若需更強加密可改為encryptionStrength: 3(AES-256)
                 }
 
-            }
+                //zipWriter
+                let zipWriter = new ZipWriter(new Uint8ArrayWriter(), zipOpt)
 
-            //close
-            let u8 = await zipWriter.close()
+                //bn, 以來源資料夾名稱為zip內根目錄(同archiver.directory(fpSrc, basename)行為)
+                let bn = path.basename(fpSrc)
 
-            //writeFileSync
-            fs.writeFileSync(fpTar, u8)
+                //root, 根目錄亦如子資料夾以目錄項保留(同7z), 來源為空資料夾時解壓後仍有根資料夾
+                await zipWriter.add(bn, undefined, { directory: true })
+
+                //items, 遞迴列舉資料夾下全部檔案與子資料夾, 目標位於來源資料夾內時排除暫存資料夾與既有目標(與先刪除目標再壓縮之結果相同)
+                let fdTemp = path.dirname(fpOut)
+                let fpTarAbs = path.resolve(fpTar)
+                let items = fsTreeFolder(fpSrc, null).filter((item) => {
+                    let p = path.resolve(item.path)
+                    return p !== fpTarAbs && !isSameOrInside(p, fdTemp)
+                })
+
+                //add
+                for (let item of items) {
+
+                    //name, zip內相對路徑統一用'/'
+                    let rel = path.relative(fpSrc, item.path)
+                    let name = path.join(bn, rel).replaceAll('\\', '/')
+
+                    if (item.isFolder) {
+
+                        //directory, 保留空資料夾結構
+                        await zipWriter.add(name, undefined, { directory: true })
+
+                    }
+                    else {
+
+                        //file
+                        let b = fs.readFileSync(item.path)
+                        await zipWriter.add(name, new Uint8ArrayReader(b))
+
+                    }
+
+                }
+
+                //close
+                let u8 = await zipWriter.close()
+
+                //writeFileSync
+                fs.writeFileSync(fpOut, u8)
+
+            })
 
             return Promise.resolve('done: ' + fpTar)
         }
@@ -300,7 +295,7 @@ function mZip() {
     /**
      * 解壓縮檔案至資料夾
      *
-     * 目標資料夾已存在時會先整個刪除再解壓(資料夾內原有檔案不保留)，目標所在資料夾不存在時會自動建立，壓縮檔無任何項目時亦建立目標資料夾。解出內容會驗證CRC32，資料損毀或密碼錯誤時reject。含不安全路徑(例如'../'、絕對路徑、磁碟代號)項目之壓縮檔會整個reject。同名項目依序寫出，以最後一筆為準。
+     * 先解壓至目標同層之暫存資料夾，成功後才整個取代既有目標資料夾(資料夾內原有檔案不保留)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立，壓縮檔無任何項目時亦建立目標資料夾。解出內容會驗證CRC32，資料損毀或密碼錯誤時reject。含不安全路徑(例如'../'、絕對路徑、磁碟代號)項目之壓縮檔會整個reject。同名項目依序寫出，以最後一筆為準。
      *
      * @memberof mZip
      * @param {String} fpSrc 輸入解壓縮來源檔案位置字串
@@ -319,11 +314,6 @@ function mZip() {
             return Promise.reject('path of source is not file')
         }
 
-        //check fpTar
-        if (!checkTarget(fpTar)) {
-            return Promise.reject('invalid fpSrc')
-        }
-
         //default
         let pw = get(opt, 'pw', '')
 
@@ -335,51 +325,54 @@ function mZip() {
                 readerOpt.password = pw
             }
 
-            //zipReader
-            let b = fs.readFileSync(fpSrc)
-            let zipReader = new ZipReader(new Uint8ArrayReader(b), readerOpt)
+            //replaceTarget, 於目標同層暫存資料夾解壓, 成功後才取代目標, 失敗時不變動既有目標
+            await replaceTarget(fpTar, fpSrc, async (fdOut) => {
 
-            //entries
-            let entries = await zipReader.getEntries()
+                //mkdir, 壓縮檔無任何項目時仍有目標資料夾
+                fs.mkdirSync(fdOut, { recursive: true })
 
-            //extract
-            for (let entry of entries) {
+                //zipReader
+                let b = fs.readFileSync(fpSrc)
+                let zipReader = new ZipReader(new Uint8ArrayReader(b), readerOpt)
 
-                //p, 解壓目標位置
-                let p = path.join(fpTar, entry.filename)
+                //entries
+                let entries = await zipReader.getEntries()
 
-                if (entry.directory) {
+                //extract
+                for (let entry of entries) {
 
-                    //mkdir
-                    if (!fs.existsSync(p)) {
-                        fs.mkdirSync(p, { recursive: true })
+                    //p, 解壓目標位置
+                    let p = path.join(fdOut, entry.filename)
+
+                    if (entry.directory) {
+
+                        //mkdir
+                        if (!fs.existsSync(p)) {
+                            fs.mkdirSync(p, { recursive: true })
+                        }
+
+                    }
+                    else {
+
+                        //mkdir, 先建立上層資料夾
+                        if (!fs.existsSync(path.dirname(p))) {
+                            fs.mkdirSync(path.dirname(p), { recursive: true })
+                        }
+
+                        //getData
+                        let u8 = await entry.getData(new Uint8ArrayWriter())
+
+                        //writeFileSync
+                        fs.writeFileSync(p, u8)
+
                     }
 
                 }
-                else {
 
-                    //mkdir, 先建立上層資料夾
-                    if (!fs.existsSync(path.dirname(p))) {
-                        fs.mkdirSync(path.dirname(p), { recursive: true })
-                    }
+                //close
+                await zipReader.close()
 
-                    //getData
-                    let u8 = await entry.getData(new Uint8ArrayWriter())
-
-                    //writeFileSync
-                    fs.writeFileSync(p, u8)
-
-                }
-
-            }
-
-            //mkdir, 壓縮檔無任何項目時仍建立目標資料夾
-            if (!fs.existsSync(fpTar)) {
-                fs.mkdirSync(fpTar, { recursive: true })
-            }
-
-            //close
-            await zipReader.close()
+            })
 
             return Promise.resolve('done: ' + getFileName(fpTar))
         }

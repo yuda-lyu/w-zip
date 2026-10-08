@@ -29,6 +29,137 @@ describe('mZip', function() {
         catch (err) {}
     })
 
+    describe('目標處理', function() {
+
+        //listWzip, 列出資料夾內暫存或備份(名稱含.wzip-)之項目
+        let listWzip = (fd) => fs.readdirSync(fd).filter((v) => v.includes('.wzip-'))
+
+        //規格: JSDoc「操作失敗時不變動既有目標」
+        it('TG01 操作中失敗時既有目標不變', async function() {
+            let fd = `${fdTmp}/tg01`
+            fs.mkdirSync(fd, { recursive: true })
+            for (let fun of [(t) => wz.mZip.zipFile(fpTxt, t, { pw: 123 }), (t) => wz.mZip.zipFolder(fdSrc, t, { pw: 123 })]) {
+                let fp = `${fd}/exist.zip`
+                fs.writeFileSync(fp, 'existing')
+                assert.ok(await getRejection(fun(fp)))
+                assert.strict.equal(fs.readFileSync(fp, 'utf8'), 'existing')
+            }
+            let fpPW = `${fd}/pw.zip`
+            await wz.mZip.zipFolder(fdSrc, fpPW, { pw })
+            for (let [src, opt] of [[fpTxt, {}], [fpPW, { pw: 'abd' }]]) {
+                let fdOut = `${fd}/existDir`
+                fs.rmSync(fdOut, { recursive: true, force: true })
+                fs.mkdirSync(fdOut, { recursive: true })
+                fs.writeFileSync(`${fdOut}/keep.txt`, 'keep')
+                assert.ok(await getRejection(wz.mZip.unzip(src, fdOut, opt)), src)
+                assert.strict.deepEqual(treeOf(fdOut), ['keep.txt'], src)
+            }
+        })
+
+        //規格: 暫存與備份僅於操作期間存在
+        it('TG02 成功或失敗後目標同層無暫存或備份殘留', async function() {
+            let fd = `${fdTmp}/tg02`
+            fs.mkdirSync(fd, { recursive: true })
+            await wz.mZip.zipFile(fpTxt, `${fd}/a.zip`)
+            await wz.mZip.zipFile(fpTxt, `${fd}/a.zip`)
+            await wz.mZip.zipFolder(fdSrc, `${fd}/b.zip`)
+            await wz.mZip.unzip(`${fd}/b.zip`, `${fd}/out`)
+            await wz.mZip.unzip(`${fd}/b.zip`, `${fd}/out`)
+            await getRejection(wz.mZip.unzip(fpTxt, `${fd}/out`))
+            await getRejection(wz.mZip.zipFile(fpTxt, `${fd}/a.zip`, { pw: 123 }))
+            assert.strict.deepEqual(listWzip(fd), [])
+            assertSameTree(fdSrc, `${fd}/out/srcTree`)
+        })
+
+        //規格: fpTar須為非空字串
+        it('TG03 fpTar非字串或空字串時reject', async function() {
+            let fpZip = `${fdTmp}/tg03.zip`
+            await wz.mZip.zipFile(fpTxt, fpZip)
+            for (let t of [undefined, null, 123, '']) {
+                assert.strict.equal(await getRejection(wz.mZip.zipFile(fpTxt, t)), 'invalid fpTar', String(t))
+                assert.strict.equal(await getRejection(wz.mZip.zipFolder(fdSrc, t)), 'invalid fpTar', String(t))
+                assert.strict.equal(await getRejection(wz.mZip.unzip(fpZip, t)), 'invalid fpTar', String(t))
+            }
+        })
+
+        //規格: 以結果取代既有目標失敗時須還原既有目標
+        it('TG04 以結果取代既有目標之改名失敗時還原既有目標', async function() {
+            let fd = `${fdTmp}/tg04`
+            fs.mkdirSync(fd, { recursive: true })
+            let fp = `${fd}/a.zip`
+            fs.writeFileSync(fp, 'existing')
+            let rename0 = fs.renameSync
+            fs.renameSync = (a, b) => {
+                if (path.resolve(String(b)) === path.resolve(fp) && !String(a).includes('.wzip-old-')) {
+                    throw new Error('mock rename failure') //僅擋「產物改名為目標」, 備份與還原照常
+                }
+                return rename0(a, b)
+            }
+            let err
+            try {
+                err = await getRejection(wz.mZip.zipFile(fpTxt, fp))
+            }
+            finally {
+                fs.renameSync = rename0
+            }
+            assert.match(errMsg(err), /mock rename failure/)
+            assert.strict.equal(fs.readFileSync(fp, 'utf8'), 'existing')
+            assert.strict.deepEqual(listWzip(fd), [])
+        })
+
+        //規格: JSDoc「目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)」
+        it('TG07 目標為來源本身、來源之上層或工作目錄時reject且皆不變動', async function() {
+            let fd = `${fdTmp}/tg07`
+            let fdBox = `${fd}/box`
+            fs.mkdirSync(fdBox, { recursive: true })
+            let fpZip = `${fdBox}/a.zip`
+            await wz.mZip.zipFile(fpTxt, fpZip)
+            assert.strict.equal(await getRejection(wz.mZip.unzip(fpZip, fdBox)), 'unsafe fpTar') //解壓至壓縮檔所在資料夾
+            assert.strict.equal(await getRejection(wz.mZip.zipFile(fpZip, fpZip)), 'unsafe fpTar')
+            assert.strict.equal(await getRejection(wz.mZip.zipFolder(fdBox, fdBox)), 'unsafe fpTar')
+            assert.strict.equal(await getRejection(wz.mZip.zipFolder(fdBox, fd)), 'unsafe fpTar')
+            assert.strict.deepEqual(treeOf(fd), ['box/', 'box/a.zip'])
+            //工作目錄: 於沙箱資料夾切換工作目錄後以'.'為目標, 來源位於沙箱外
+            let fdSandbox = path.resolve(fd, 'sandbox')
+            fs.mkdirSync(fdSandbox, { recursive: true })
+            fs.writeFileSync(path.join(fdSandbox, 'keep.txt'), 'keep')
+            let fpZipAbs = path.resolve(fpZip)
+            let cwd0 = process.cwd()
+            let errs = []
+            process.chdir(fdSandbox)
+            try {
+                errs.push(await getRejection(wz.mZip.unzip(fpZipAbs, '.')))
+                errs.push(await getRejection(wz.mZip.zipFile(fpZipAbs, '.')))
+            }
+            finally {
+                process.chdir(cwd0)
+            }
+            assert.strict.deepEqual(errs, ['unsafe fpTar', 'unsafe fpTar'])
+            assert.strict.deepEqual(treeOf(fdSandbox), ['keep.txt'])
+        })
+
+        //規格: JSDoc「目標位於來源資料夾內時不含目標本身」(與修改前先刪除目標再壓縮之結果相同)
+        it('TG08 目標位於來源資料夾內時壓縮檔不含目標本身與暫存', async function() {
+            let fdBox = `${fdTmp}/tg08/box`
+            fs.mkdirSync(fdBox, { recursive: true })
+            fs.writeFileSync(`${fdBox}/a.txt`, 'aaa')
+            let fpInner = `${fdBox}/inner.zip`
+            await wz.mZip.zipFolder(fdBox, fpInner)
+            await wz.mZip.zipFolder(fdBox, fpInner) //第二次時目標已存在於來源內
+            assert.strict.deepEqual((await wz.mZip.listEntries(fpInner)).map((v) => v.filename), ['box/', 'box/a.txt'])
+        })
+
+        //規格: 目標無法建立時reject
+        it('TG05 目標無法建立(上層路徑為檔案)時reject', async function() {
+            fs.writeFileSync(`${fdTmp}/tg05blocker`, 'x')
+            await wz.mZip.zipFile(fpTxt, `${fdTmp}/tg05.zip`)
+            assert.ok(await getRejection(wz.mZip.unzip(`${fdTmp}/tg05.zip`, `${fdTmp}/tg05blocker/out`)))
+            assert.ok(await getRejection(wz.mZip.zipFolder(fdSrc, `${fdTmp}/tg05blocker/x.zip`)))
+            assert.strict.equal(fs.readFileSync(`${fdTmp}/tg05blocker`, 'utf8'), 'x')
+        })
+
+    })
+
     describe('README範例流程', function() {
 
         //規格: README「Example for ZIP」(原zip.test.mjs之情境): 以repo之test/input素材(中文檔名、xlsx)壓縮單檔與資料夾(含密碼), 輸出資料夾不存在時自動建立, 解壓後內容與來源相同
