@@ -1,13 +1,13 @@
 {
   "name": "w-zip",
-  "version": "1.0.46",
+  "version": "1.0.47",
   "main": "dist/w-zip.umd.js",
   "dependencies": {
     "@zip.js/zip.js": "^2.22.0",
-    "wsemi": "^1.9.12"
+    "wsemi": "^1.9.21"
   },
   "devDependencies": {
-    "w-package-tools": "^1.1.16"
+    "w-package-tools": "^1.1.21"
   },
   "scripts": {
     "test": "mocha --parallel \"test/*.test.mjs\" --timeout 180000",
