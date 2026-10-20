@@ -4,7 +4,7 @@ import crypto from 'crypto'
 import assert from 'assert'
 import { ZipWriter, ZipReader, Uint8ArrayReader, Uint8ArrayWriter, TextReader, TextWriter } from '@zip.js/zip.js'
 import wz from '../src/WZip.mjs'
-import { makeZip, replaceName, makeSlipZip, makeDupZip, getRejection, findFalseAcceptPassword } from './tools/helpers.mjs'
+import { makeZip, replaceName, makeSlipZip, makeDupZip, getRejection, findFalseAcceptPassword, spyFs } from './tools/helpers.mjs'
 
 
 //walkSrc, 由來源資料夾列出zipFolder應產生之項目(以來源資料夾名稱為根目錄項, 子資料夾為目錄項)
@@ -32,44 +32,6 @@ function walkSrc(fdSrc) {
 //listFiles, 遞迴列出資料夾內所有檔案相對路徑, 用以確認讀取不寫入磁碟
 function listFiles(fd) {
     return fs.readdirSync(fd, { recursive: true }).map((v) => String(v)).sort()
-}
-
-
-//spyFs, 攔截fs.promises.open以統計開啟/關閉之檔案代號數、實際讀取位元組數與單次讀取緩衝區最大長度, 結束後還原
-//opt.maxChunk: 限制每次read最多回傳之位元組數, 用以模擬短讀
-async function spyFs(fun, opt = {}) {
-    let open0 = fs.promises.open
-    let st = { opened: 0, closed: 0, bytesRead: 0, maxBuffer: 0, result: undefined, error: undefined }
-    fs.promises.open = async (...args) => {
-        let fh = await open0.apply(fs.promises, args)
-        st.opened++
-        let read0 = fh.read.bind(fh)
-        let close0 = fh.close.bind(fh)
-        fh.read = async (buffer, offset, length, position) => {
-            st.maxBuffer = Math.max(st.maxBuffer, buffer.length)
-            if (opt.maxChunk) {
-                length = Math.min(length, opt.maxChunk)
-            }
-            let r = await read0(buffer, offset, length, position)
-            st.bytesRead += r.bytesRead
-            return r
-        }
-        fh.close = async () => {
-            st.closed++
-            return close0()
-        }
-        return fh
-    }
-    try {
-        st.result = await fun()
-    }
-    catch (err) {
-        st.error = err
-    }
-    finally {
-        fs.promises.open = open0
-    }
-    return st
 }
 
 

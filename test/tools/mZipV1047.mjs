@@ -1,0 +1,605 @@
+import path from 'path'
+import fs from 'fs'
+import { configure, ZipWriter, ZipReader, Reader, Uint8ArrayReader, Uint8ArrayWriter, TextWriter } from '@zip.js/zip.js'
+import get from 'lodash-es/get.js'
+import fsTreeFolder from 'wsemi/src/fsTreeFolder.mjs'
+import getFileName from 'wsemi/src/getFileName.mjs'
+import checkLevel from './checkLevelV1047.mjs'
+import replaceTarget, { isSameOrInside } from './replaceTargetV1047.mjs'
+
+
+//本檔為w-zip 1.0.47(967736a)之src/mZip.mjs原樣凍結(僅修改上列兩行import路徑, 其相依src/checkLevel.mjs與src/replaceTarget.mjs亦原樣凍結為同資料夾之checkLevelV1047.mjs與replaceTargetV1047.mjs), 供測試作為「修改前實作」之等價比對與記憶體對照基準, 不得修改, 亦非套件對外內容
+
+
+//configure
+configure({ useWebWorkers: false }) //關閉web worker改用主執行緒壓縮, 確保nodejs下無殘留worker導致process無法結束
+
+
+/**
+ * Zip處理
+ *
+ * @class
+ * @returns {Object} 回傳壓縮物件，可使用函數zipFile、zipFolder、unzip、listEntries、readEntry
+ * @example
+ * import wz from 'w-zip'
+ *
+ * let fpUnzip = './test/outputZip'
+ * let fpUnzipExtract = fpUnzip + '/extract'
+ *
+ * let fpSrc1 = './test/input/file1(中文).txt'
+ * let fpZip1 = fpUnzip + '/test1.zip'
+ *
+ * let fpSrc2 = './test/input/folder1'
+ * let fpZip2 = fpUnzip + '/test2.zip'
+ * let fpZip2PW = fpUnzip + '/test2PW.zip'
+ * let pw = 'abc'
+ *
+ * async function test() {
+ *
+ *     //zipFile
+ *     console.log('zipFile before')
+ *     console.log('zipFile', await wz.mZip.zipFile(fpSrc1, fpZip1))
+ *     console.log('zipFile after')
+ *
+ *     //zipFolder
+ *     console.log('zipFolder before')
+ *     console.log('zipFolder', await wz.mZip.zipFolder(fpSrc2, fpZip2))
+ *     console.log('zipFolder after')
+ *
+ *     //zipFolder with password
+ *     console.log('zipFolder with password before')
+ *     console.log('zipFolder with password', await wz.mZip.zipFolder(fpSrc2, fpZip2PW, { pw }))
+ *     console.log('zipFolder with password after')
+ *
+ *     //unzip
+ *     console.log('unzip1 before')
+ *     console.log('unzip1', await wz.mZip.unzip(fpZip1, fpUnzipExtract + '/test1'))
+ *     console.log('unzip1 after')
+ *
+ *     //unzip
+ *     console.log('unzip2 before')
+ *     console.log('unzip2', await wz.mZip.unzip(fpZip2, fpUnzipExtract + '/test2'))
+ *     console.log('unzip2 after')
+ *
+ *     //unzip with password
+ *     console.log('unzip2 with password before')
+ *     console.log('unzip2 with password', await wz.mZip.unzip(fpZip2PW, fpUnzipExtract + '/test2PW', { pw }))
+ *     console.log('unzip2 with password after')
+ *
+ *     //listEntries
+ *     console.log('listEntries before')
+ *     console.log('listEntries', (await wz.mZip.listEntries(fpZip2)).map((v) => v.filename))
+ *     console.log('listEntries after')
+ *
+ *     //readEntry
+ *     console.log('readEntry before')
+ *     console.log('readEntry', JSON.parse(await wz.mZip.readEntry(fpZip1, 'file1(中文).txt')).name)
+ *     console.log('readEntry after')
+ *
+ *     //readEntry with password
+ *     console.log('readEntry with password before')
+ *     console.log('readEntry with password', (await wz.mZip.readEntry(fpZip2PW, 'folder1/f1-1.xlsx', { type: 'u8', pw })).length)
+ *     console.log('readEntry with password after')
+ *
+ * }
+ * test()
+ *     .catch((err) => {
+ *         console.log(err)
+ *     })
+ *
+ * // zipFile before
+ * // zipFile done: test1.zip
+ * // zipFile after
+ * // zipFolder before
+ * // zipFolder done: test2.zip
+ * // zipFolder after
+ * // zipFolder with password before
+ * // zipFolder with password done: test2PW.zip
+ * // zipFolder with password after
+ * // unzip1 before
+ * // unzip1 done: test1
+ * // unzip1 after
+ * // unzip2 before
+ * // unzip2 done: test2
+ * // unzip2 after
+ * // unzip2 with password before
+ * // unzip2 with password done: test2PW
+ * // unzip2 with password after
+ * // listEntries before
+ * // listEntries [
+ * //   'folder1/',
+ * //   'folder1/f1-1.xlsx',
+ * //   'folder1/f1-2.xlsx',
+ * //   'folder1/folder2/',
+ * //   'folder1/folder2/f2-1.xlsx',
+ * //   'folder1/folder2/f2-2.xlsx',
+ * //   'folder1/folder2/f2-3(中文).xlsx'
+ * // ]
+ * // listEntries after
+ * // readEntry before
+ * // readEntry w-backup
+ * // readEntry after
+ * // readEntry with password before
+ * // readEntry with password 6663
+ * // readEntry with password after
+ */
+function mZip() {
+
+
+    /**
+     * 壓縮檔案
+     *
+     * 壓縮檔內項目名為來源檔名。壓縮檔先產於目標同層之暫存位置，成功後才取代既有目標(覆寫)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立。給予密碼時以ZipCrypto加密(相容Windows檔案總管)。
+     *
+     * @memberof mZip
+     * @param {String} fpSrc 輸入壓縮來源檔案位置字串
+     * @param {String} fpTar 輸入壓縮目標檔案位置字串
+     * @param {Object} [opt={}] 輸入設定物件，預設{}
+     * @param {Integer} [opt.level=9] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，範圍外或非整數時reject且不變動既有目標，預設9
+     * @param {String} [opt.pw=''] 輸入壓縮密碼字串，預設''
+     * @returns {Promise} 回傳Promise，resolve為成功資訊，reject為失敗資訊
+     */
+    async function zipFile(fpSrc, fpTar, opt = {}) {
+
+        //check
+        if (!fs.existsSync(fpSrc)) {
+            return Promise.reject('invalid path of source file')
+        }
+        if (!fs.lstatSync(fpSrc).isFile()) {
+            return Promise.reject('path of source is not file')
+        }
+
+        //default
+        let level = get(opt, 'level', 9)
+        let pw = get(opt, 'pw', '')
+
+        //check level
+        let errLevel = checkLevel(level)
+        if (errLevel !== '') {
+            return Promise.reject(new Error(errLevel))
+        }
+
+        try {
+
+            //replaceTarget, 於目標同層暫存產出, 成功後才取代目標, 失敗時不變動既有目標
+            await replaceTarget(fpTar, fpSrc, async (fpOut) => {
+
+                //zipOpt
+                let zipOpt = { level }
+                if (pw !== '') {
+                    zipOpt.password = pw
+                    zipOpt.zipCrypto = true //使用ZipCrypto(即zip20)加密維持與舊版相同相容性, 若需更強加密可改為encryptionStrength: 3(AES-256)
+                }
+
+                //zipWriter
+                let zipWriter = new ZipWriter(new Uint8ArrayWriter(), zipOpt)
+
+                //add
+                let b = fs.readFileSync(fpSrc)
+                await zipWriter.add(path.basename(fpSrc), new Uint8ArrayReader(b))
+
+                //close
+                let u8 = await zipWriter.close()
+
+                //writeFileSync
+                fs.writeFileSync(fpOut, u8)
+
+            })
+
+            return Promise.resolve('done: ' + fpTar)
+        }
+        catch (err) {
+            return Promise.reject(err)
+        }
+    }
+
+
+    /**
+     * 壓縮資料夾
+     *
+     * 壓縮檔內以來源資料夾名稱為根目錄(含根目錄項)，含全部子資料夾與檔案，空資料夾亦保留(來源為空資料夾時解壓後仍有根資料夾)，目標位於來源資料夾內時不含目標本身。壓縮檔先產於目標同層之暫存位置，成功後才取代既有目標(覆寫)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立。給予密碼時以ZipCrypto加密(相容Windows檔案總管)。
+     *
+     * @memberof mZip
+     * @param {String} fpSrc 輸入壓縮來源資料夾位置字串
+     * @param {String} fpTar 輸入壓縮目標檔案位置字串
+     * @param {Object} [opt={}] 輸入設定物件，預設{}
+     * @param {Integer} [opt.level=9] 輸入壓縮程度整數，範圍為0至9，0為不壓縮而9為最高壓縮，範圍外或非整數時reject且不變動既有目標，預設9
+     * @param {String} [opt.pw=''] 輸入壓縮密碼字串，預設''
+     * @returns {Promise} 回傳Promise，resolve為成功資訊，reject為失敗資訊
+     */
+    async function zipFolder(fpSrc, fpTar, opt = {}) {
+
+        //check
+        if (!fs.existsSync(fpSrc)) {
+            return Promise.reject('invalid path of source file')
+        }
+        if (!fs.lstatSync(fpSrc).isDirectory()) {
+            return Promise.reject('path of source is not folder')
+        }
+
+        //default
+        let level = get(opt, 'level', 9)
+        let pw = get(opt, 'pw', '')
+
+        //check level
+        let errLevel = checkLevel(level)
+        if (errLevel !== '') {
+            return Promise.reject(new Error(errLevel))
+        }
+
+        try {
+
+            //replaceTarget, 於目標同層暫存產出, 成功後才取代目標, 失敗時不變動既有目標
+            await replaceTarget(fpTar, fpSrc, async (fpOut) => {
+
+                //zipOpt
+                let zipOpt = { level }
+                if (pw !== '') {
+                    zipOpt.password = pw
+                    zipOpt.zipCrypto = true //使用ZipCrypto(即zip20)加密維持與舊版相同相容性, 若需更強加密可改為encryptionStrength: 3(AES-256)
+                }
+
+                //zipWriter
+                let zipWriter = new ZipWriter(new Uint8ArrayWriter(), zipOpt)
+
+                //bn, 以來源資料夾名稱為zip內根目錄(同archiver.directory(fpSrc, basename)行為)
+                let bn = path.basename(fpSrc)
+
+                //root, 根目錄亦如子資料夾以目錄項保留(同7z), 來源為空資料夾時解壓後仍有根資料夾
+                await zipWriter.add(bn, undefined, { directory: true })
+
+                //items, 遞迴列舉資料夾下全部檔案與子資料夾, 目標位於來源資料夾內時排除暫存資料夾與既有目標(與先刪除目標再壓縮之結果相同)
+                let fdTemp = path.dirname(fpOut)
+                let fpTarAbs = path.resolve(fpTar)
+                let items = fsTreeFolder(fpSrc, null).filter((item) => {
+                    let p = path.resolve(item.path)
+                    return p !== fpTarAbs && !isSameOrInside(p, fdTemp)
+                })
+
+                //add
+                for (let item of items) {
+
+                    //name, zip內相對路徑統一用'/'
+                    let rel = path.relative(fpSrc, item.path)
+                    let name = path.join(bn, rel).replaceAll('\\', '/')
+
+                    if (item.isFolder) {
+
+                        //directory, 保留空資料夾結構
+                        await zipWriter.add(name, undefined, { directory: true })
+
+                    }
+                    else {
+
+                        //file
+                        let b = fs.readFileSync(item.path)
+                        await zipWriter.add(name, new Uint8ArrayReader(b))
+
+                    }
+
+                }
+
+                //close
+                let u8 = await zipWriter.close()
+
+                //writeFileSync
+                fs.writeFileSync(fpOut, u8)
+
+            })
+
+            return Promise.resolve('done: ' + fpTar)
+        }
+        catch (err) {
+            return Promise.reject(err)
+        }
+    }
+
+
+    /**
+     * 解壓縮檔案至資料夾
+     *
+     * 先解壓至目標同層之暫存資料夾，成功後才整個取代既有目標資料夾(資料夾內原有檔案不保留)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立，壓縮檔無任何項目時亦建立目標資料夾。解出內容會驗證CRC32，資料損毀或密碼錯誤時reject。含不安全路徑(例如'../'、絕對路徑、磁碟代號)項目之壓縮檔會整個reject。同名項目依序寫出，以最後一筆為準。
+     *
+     * @memberof mZip
+     * @param {String} fpSrc 輸入解壓縮來源檔案位置字串
+     * @param {String} fpTar 輸入解壓縮目標資料夾位置字串
+     * @param {Object} [opt={}] 輸入設定物件，預設{}
+     * @param {String} [opt.pw=''] 輸入解壓縮密碼字串，預設''
+     * @returns {Promise} 回傳Promise，resolve為成功資訊，reject為失敗資訊
+     */
+    async function unzip(fpSrc, fpTar, opt = {}) {
+
+        //check
+        if (!fs.existsSync(fpSrc)) {
+            return Promise.reject('invalid path of source file')
+        }
+        if (!fs.lstatSync(fpSrc).isFile()) {
+            return Promise.reject('path of source is not file')
+        }
+
+        //default
+        let pw = get(opt, 'pw', '')
+
+        try {
+
+            //readerOpt, 驗證CRC32以免資料損毀或錯誤密碼(ZipCrypto僅以1位元組驗證密碼)時寫出錯誤內容
+            let readerOpt = { checkCrc32: true }
+            if (pw !== '') {
+                readerOpt.password = pw
+            }
+
+            //replaceTarget, 於目標同層暫存資料夾解壓, 成功後才取代目標, 失敗時不變動既有目標
+            await replaceTarget(fpTar, fpSrc, async (fdOut) => {
+
+                //mkdir, 壓縮檔無任何項目時仍有目標資料夾
+                fs.mkdirSync(fdOut, { recursive: true })
+
+                //zipReader
+                let b = fs.readFileSync(fpSrc)
+                let zipReader = new ZipReader(new Uint8ArrayReader(b), readerOpt)
+
+                //entries
+                let entries = await zipReader.getEntries()
+
+                //extract
+                for (let entry of entries) {
+
+                    //p, 解壓目標位置
+                    let p = path.join(fdOut, entry.filename)
+
+                    if (entry.directory) {
+
+                        //mkdir
+                        if (!fs.existsSync(p)) {
+                            fs.mkdirSync(p, { recursive: true })
+                        }
+
+                    }
+                    else {
+
+                        //mkdir, 先建立上層資料夾
+                        if (!fs.existsSync(path.dirname(p))) {
+                            fs.mkdirSync(path.dirname(p), { recursive: true })
+                        }
+
+                        //getData
+                        let u8 = await entry.getData(new Uint8ArrayWriter())
+
+                        //writeFileSync
+                        fs.writeFileSync(p, u8)
+
+                    }
+
+                }
+
+                //close
+                await zipReader.close()
+
+            })
+
+            return Promise.resolve('done: ' + getFileName(fpTar))
+        }
+        catch (err) {
+            return Promise.reject(err)
+        }
+    }
+
+
+    //checkSrc, 檢查不解壓讀取之來源, 可為檔案位置字串或Buffer、Uint8Array, 有誤回傳錯誤訊息字串, 無誤回傳空字串
+    function checkSrc(src) {
+
+        //Uint8Array, Buffer亦為Uint8Array
+        if (src instanceof Uint8Array) {
+            return ''
+        }
+
+        //check
+        if (typeof src !== 'string') {
+            return 'invalid src'
+        }
+        if (!fs.existsSync(src)) {
+            return 'invalid path of source file'
+        }
+        if (!fs.lstatSync(src).isFile()) {
+            return 'path of source is not file'
+        }
+
+        return ''
+    }
+
+
+    //readZip, 開啟src之ZipReader交由fun處理, 結束時(含失敗)關閉ZipReader與檔案代號
+    async function readZip(src, readerOpt, fun) {
+
+        //reader
+        let fh = null
+        let reader
+        if (src instanceof Uint8Array) {
+            reader = new Uint8ArrayReader(src)
+        }
+        else {
+
+            //reader, 以zip.js之Reader為基底(沿用其createReadable)補上init與readUint8Array, 依位置隨機讀取檔案, 只讀中央目錄與所需項目而不載入整檔
+            reader = new Reader()
+            reader.init = async () => {
+                fh = await fs.promises.open(src, 'r')
+                reader.size = (await fh.stat()).size
+                reader.initialized = true
+            }
+            reader.readUint8Array = async (index, length) => {
+
+                //len, 依檔案實際大小夾限, 避免依異常之宣告長度配置過大緩衝區(同Uint8ArrayReader以slice夾限)
+                let len = Math.max(0, Math.min(length, reader.size - index))
+
+                //read, 迴圈讀滿以處理短讀, 讀到0位元組視為檔尾
+                let u8 = new Uint8Array(len)
+                let n = 0
+                while (n < len) {
+                    let { bytesRead } = await fh.read(u8, n, len - n, index + n)
+                    if (bytesRead === 0) {
+                        break
+                    }
+                    n += bytesRead
+                }
+
+                return n < len ? u8.subarray(0, n) : u8
+            }
+
+        }
+
+        //zipReader, 項目名之'\'視為路徑分隔而正規化為'/'(壓縮檔規範要求以'/'分隔, 部分工具寫入'\')
+        let zipReader = new ZipReader(reader, Object.assign({}, readerOpt, {
+            normalizeFilename: (filename) => filename.replaceAll('\\', '/'),
+        }))
+
+        try {
+            return await fun(zipReader)
+        }
+        finally {
+            try {
+                await zipReader.close()
+            }
+            finally {
+                if (fh !== null) {
+                    await fh.close()
+                }
+            }
+        }
+    }
+
+
+    /**
+     * 列出壓縮檔內項目，不解壓至資料夾
+     *
+     * 加密之壓縮檔不需密碼即可列出。含不安全路徑(例如'../'、絕對路徑、磁碟代號)項目之壓縮檔會整個reject。
+     * 項目名以'\'分隔者會正規化為'/'。項目名未標示UTF-8且無Unicode路徑欄位者(例如部分工具以Big5寫入)，依zip.js預設以CP437解碼，名稱會呈現亂碼，讀取時須使用回傳之名稱。
+     *
+     * @memberof mZip
+     * @param {String|Buffer|Uint8Array} src 輸入壓縮檔案位置字串，或壓縮檔內容之Buffer、Uint8Array，給予檔案位置時只讀取中央目錄而不載入整個檔案
+     * @returns {Promise} 回傳Promise，resolve為項目陣列，依壓縮檔中央目錄順序，各項目為{filename,directory,uncompressedSize,compressedSize,encrypted,lastModDate}，filename為壓縮檔內以'/'分隔之路徑，reject為失敗資訊
+     */
+    async function listEntries(src) {
+
+        //check
+        let errSrc = checkSrc(src)
+        if (errSrc !== '') {
+            return Promise.reject(errSrc)
+        }
+
+        try {
+
+            //entries, 轉為純物件, 不外露zip.js之entry(讀取器關閉後其getData已不可用)
+            let entries = await readZip(src, {}, async (zipReader) => {
+                let es = await zipReader.getEntries()
+                return es.map((entry) => {
+                    return {
+                        filename: entry.filename,
+                        directory: entry.directory,
+                        uncompressedSize: entry.uncompressedSize,
+                        compressedSize: entry.compressedSize,
+                        encrypted: entry.encrypted,
+                        lastModDate: entry.lastModDate,
+                    }
+                })
+            })
+
+            return entries
+        }
+        catch (err) {
+            return Promise.reject(err)
+        }
+    }
+
+
+    /**
+     * 讀取壓縮檔內單一項目，不解壓至資料夾
+     *
+     * 讀出內容會驗證CRC32，資料損毀或密碼錯誤時reject。含不安全路徑(例如'../'、絕對路徑、磁碟代號)項目之壓縮檔會整個reject。
+     *
+     * @memberof mZip
+     * @param {String|Buffer|Uint8Array} src 輸入壓縮檔案位置字串，或壓縮檔內容之Buffer、Uint8Array，給予檔案位置時只讀取中央目錄與該項目而不載入整個檔案
+     * @param {String} filename 輸入項目路徑字串，須與listEntries回傳之filename完全相同(以'/'分隔且區分大小寫)，若有同名項目則取最後一筆
+     * @param {Object} [opt={}] 輸入設定物件，預設{}
+     * @param {String} [opt.type='text'] 輸入回傳資料型態字串，可選'text'為UTF-8解碼之字串(去除BOM)、'u8'為Uint8Array，非UTF-8之文字內容請用'u8'自行解碼，預設'text'
+     * @param {String} [opt.pw=''] 輸入解壓縮密碼字串，預設''
+     * @returns {Promise} 回傳Promise，resolve為項目內容之字串或Uint8Array，reject為失敗資訊，找不到項目或項目為資料夾時亦為reject
+     */
+    async function readEntry(src, filename, opt = {}) {
+
+        //check
+        let errSrc = checkSrc(src)
+        if (errSrc !== '') {
+            return Promise.reject(errSrc)
+        }
+        if (typeof filename !== 'string' || filename === '') {
+            return Promise.reject('invalid filename')
+        }
+
+        //default
+        let type = get(opt, 'type', 'text')
+        let pw = get(opt, 'pw', '')
+
+        //check type
+        if (type !== 'text' && type !== 'u8') {
+            return Promise.reject('invalid opt.type')
+        }
+
+        //check pw
+        if (typeof pw !== 'string') {
+            return Promise.reject('invalid opt.pw')
+        }
+
+        try {
+
+            //readerOpt, 驗證CRC32以免資料損毀或錯誤密碼(ZipCrypto僅以1位元組驗證密碼)時回傳錯誤內容
+            let readerOpt = { checkCrc32: true }
+            if (pw !== '') {
+                readerOpt.password = pw
+            }
+
+            //data
+            let data = await readZip(src, readerOpt, async (zipReader) => {
+
+                //entry, 同名取最後一筆, 同JSZip、node-stream-zip、Python zipfile之慣例
+                let entry = null
+                let entries = await zipReader.getEntries()
+                for (let e of entries) {
+                    if (e.filename === filename) {
+                        entry = e
+                    }
+                }
+
+                //check
+                if (entry === null) {
+                    return Promise.reject(`entry not found: ${filename}`)
+                }
+                if (entry.directory) {
+                    return Promise.reject(`entry is directory: ${filename}`)
+                }
+
+                //getData, text同zip.js之TextWriter(UTF-8且去除BOM)
+                if (type === 'u8') {
+                    return entry.getData(new Uint8ArrayWriter())
+                }
+                return entry.getData(new TextWriter())
+            })
+
+            return data
+        }
+        catch (err) {
+            return Promise.reject(err)
+        }
+    }
+
+
+    return {
+        zipFile,
+        zipFolder,
+        unzip,
+        listEntries,
+        readEntry,
+    }
+}
+
+
+export default mZip()

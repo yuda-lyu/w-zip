@@ -1,5 +1,6 @@
 import path from 'path'
 import fs from 'fs'
+import { Writable } from 'stream'
 import { configure, ZipWriter, ZipReader, Reader, Uint8ArrayReader, Uint8ArrayWriter, TextWriter } from '@zip.js/zip.js'
 import get from 'lodash-es/get.js'
 import fsTreeFolder from 'wsemi/src/fsTreeFolder.mjs'
@@ -123,10 +124,14 @@ configure({ useWebWorkers: false }) //關閉web worker改用主執行緒壓縮, 
 function mZip() {
 
 
+    //activeTemps, 進行中之壓縮暫存資料夾(含寫出中之未完成壓縮檔), 供同行程內並發之zipFolder於列舉來源時排除(目標位於來源資料夾內時, 暫存資料夾亦位於其內)
+    let activeTemps = new Set()
+
+
     /**
      * 壓縮檔案
      *
-     * 壓縮檔內項目名為來源檔名。壓縮檔先產於目標同層之暫存位置，成功後才取代既有目標(覆寫)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立。給予密碼時以ZipCrypto加密(相容Windows檔案總管)。
+     * 壓縮檔內項目名為來源檔名。以串流邊讀邊壓縮並寫出，來源檔案分段讀入而不整檔載入記憶體，記憶體用量不隨來源檔案大小增加(來源檔案於壓縮期間被變更時，壓縮檔內容為分段讀取當下之實際內容而非一致快照；行程被強制終止時，目標同層之暫存位置與其中未完成之壓縮檔不會被清除)。壓縮檔先產於目標同層之暫存位置，成功後才取代既有目標(覆寫)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立。給予密碼時以ZipCrypto加密(相容Windows檔案總管)。
      *
      * @memberof mZip
      * @param {String} fpSrc 輸入壓縮來源檔案位置字串
@@ -161,25 +166,13 @@ function mZip() {
             //replaceTarget, 於目標同層暫存產出, 成功後才取代目標, 失敗時不變動既有目標
             await replaceTarget(fpTar, fpSrc, async (fpOut) => {
 
-                //zipOpt
-                let zipOpt = { level }
-                if (pw !== '') {
-                    zipOpt.password = pw
-                    zipOpt.zipCrypto = true //使用ZipCrypto(即zip20)加密維持與舊版相同相容性, 若需更強加密可改為encryptionStrength: 3(AES-256)
-                }
+                //writeZip, 串流寫出至fpOut
+                await writeZip(fpOut, level, pw, async (zipWriter) => {
 
-                //zipWriter
-                let zipWriter = new ZipWriter(new Uint8ArrayWriter(), zipOpt)
+                    //add
+                    await addFile(zipWriter, path.basename(fpSrc), fpSrc)
 
-                //add
-                let b = fs.readFileSync(fpSrc)
-                await zipWriter.add(path.basename(fpSrc), new Uint8ArrayReader(b))
-
-                //close
-                let u8 = await zipWriter.close()
-
-                //writeFileSync
-                fs.writeFileSync(fpOut, u8)
+                })
 
             })
 
@@ -194,7 +187,7 @@ function mZip() {
     /**
      * 壓縮資料夾
      *
-     * 壓縮檔內以來源資料夾名稱為根目錄(含根目錄項)，含全部子資料夾與檔案，空資料夾亦保留(來源為空資料夾時解壓後仍有根資料夾)，目標位於來源資料夾內時不含目標本身。壓縮檔先產於目標同層之暫存位置，成功後才取代既有目標(覆寫)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立。給予密碼時以ZipCrypto加密(相容Windows檔案總管)。
+     * 壓縮檔內以來源資料夾名稱為根目錄(含根目錄項)，含全部子資料夾與檔案，空資料夾亦保留(來源為空資料夾時解壓後仍有根資料夾)，目標位於來源資料夾內時不含目標本身。以串流邊讀邊壓縮並寫出，各檔分段讀入而不整檔載入記憶體，記憶體用量不隨來源資料夾總容量增加(僅項目清單與項目資訊隨檔案數增加；來源檔案於壓縮期間被變更時，壓縮檔內容為分段讀取當下之實際內容而非一致快照；行程被強制終止時，目標同層之暫存位置與其中未完成之壓縮檔不會被清除)。壓縮檔先產於目標同層之暫存位置，成功後才取代既有目標(覆寫)，操作失敗時不變動既有目標，目標不得為根目錄、目前工作目錄或其上層、來源本身或來源之上層(否則reject)，目標所在資料夾不存在時會自動建立。給予密碼時以ZipCrypto加密(相容Windows檔案總管)。
      *
      * @memberof mZip
      * @param {String} fpSrc 輸入壓縮來源資料夾位置字串
@@ -229,58 +222,45 @@ function mZip() {
             //replaceTarget, 於目標同層暫存產出, 成功後才取代目標, 失敗時不變動既有目標
             await replaceTarget(fpTar, fpSrc, async (fpOut) => {
 
-                //zipOpt
-                let zipOpt = { level }
-                if (pw !== '') {
-                    zipOpt.password = pw
-                    zipOpt.zipCrypto = true //使用ZipCrypto(即zip20)加密維持與舊版相同相容性, 若需更強加密可改為encryptionStrength: 3(AES-256)
-                }
+                //writeZip, 串流寫出至fpOut
+                await writeZip(fpOut, level, pw, async (zipWriter) => {
 
-                //zipWriter
-                let zipWriter = new ZipWriter(new Uint8ArrayWriter(), zipOpt)
+                    //bn, 以來源資料夾名稱為zip內根目錄(同archiver.directory(fpSrc, basename)行為)
+                    let bn = path.basename(fpSrc)
 
-                //bn, 以來源資料夾名稱為zip內根目錄(同archiver.directory(fpSrc, basename)行為)
-                let bn = path.basename(fpSrc)
+                    //root, 根目錄亦如子資料夾以目錄項保留(同7z), 來源為空資料夾時解壓後仍有根資料夾
+                    await zipWriter.add(bn, undefined, { directory: true })
 
-                //root, 根目錄亦如子資料夾以目錄項保留(同7z), 來源為空資料夾時解壓後仍有根資料夾
-                await zipWriter.add(bn, undefined, { directory: true })
+                    //items, 遞迴列舉資料夾下全部檔案與子資料夾, 目標位於來源資料夾內時排除暫存資料夾(含同行程內並發之其他壓縮之暫存資料夾)與既有目標(與先刪除目標再壓縮之結果相同)
+                    let fpTarAbs = path.resolve(fpTar)
+                    let items = fsTreeFolder(fpSrc, null).filter((item) => {
+                        let p = path.resolve(item.path)
+                        return p !== fpTarAbs && !Array.from(activeTemps).some((fdTemp) => isSameOrInside(p, fdTemp))
+                    })
 
-                //items, 遞迴列舉資料夾下全部檔案與子資料夾, 目標位於來源資料夾內時排除暫存資料夾與既有目標(與先刪除目標再壓縮之結果相同)
-                let fdTemp = path.dirname(fpOut)
-                let fpTarAbs = path.resolve(fpTar)
-                let items = fsTreeFolder(fpSrc, null).filter((item) => {
-                    let p = path.resolve(item.path)
-                    return p !== fpTarAbs && !isSameOrInside(p, fdTemp)
+                    //add
+                    for (let item of items) {
+
+                        //name, zip內相對路徑統一用'/'
+                        let rel = path.relative(fpSrc, item.path)
+                        let name = path.join(bn, rel).replaceAll('\\', '/')
+
+                        if (item.isFolder) {
+
+                            //directory, 保留空資料夾結構
+                            await zipWriter.add(name, undefined, { directory: true })
+
+                        }
+                        else {
+
+                            //file
+                            await addFile(zipWriter, name, item.path)
+
+                        }
+
+                    }
+
                 })
-
-                //add
-                for (let item of items) {
-
-                    //name, zip內相對路徑統一用'/'
-                    let rel = path.relative(fpSrc, item.path)
-                    let name = path.join(bn, rel).replaceAll('\\', '/')
-
-                    if (item.isFolder) {
-
-                        //directory, 保留空資料夾結構
-                        await zipWriter.add(name, undefined, { directory: true })
-
-                    }
-                    else {
-
-                        //file
-                        let b = fs.readFileSync(item.path)
-                        await zipWriter.add(name, new Uint8ArrayReader(b))
-
-                    }
-
-                }
-
-                //close
-                let u8 = await zipWriter.close()
-
-                //writeFileSync
-                fs.writeFileSync(fpOut, u8)
 
             })
 
@@ -405,42 +385,150 @@ function mZip() {
     }
 
 
+    //createFileReader, 建立依位置隨機讀取檔案之zip.js Reader, 回傳{reader,close}, 用畢(含失敗)須呼叫close關閉檔案代號
+    //untilEof為true時, 檔案大小為0者(如Linux之/proc下虛擬檔案, 宣告大小為0但仍有內容)讀至檔尾取得實際內容, 同舊版之fs.readFileSync(此類檔案內容皆小), 供寫出側使用
+    function createFileReader(fp, untilEof = false) {
+
+        //reader, 以zip.js之Reader為基底(沿用其createReadable)補上init與readUint8Array, 依位置隨機讀取檔案, 只讀所需部分而不載入整檔
+        let fh = null
+        let u8All = null
+        let reader = new Reader()
+        reader.init = async () => {
+            fh = await fs.promises.open(fp, 'r')
+            reader.size = (await fh.stat()).size
+            if (untilEof && reader.size === 0) {
+                u8All = await fh.readFile()
+                reader.size = u8All.length
+            }
+            reader.initialized = true
+        }
+        reader.readUint8Array = async (index, length) => {
+
+            //len, 依檔案實際大小夾限, 避免依異常之宣告長度配置過大緩衝區(同Uint8ArrayReader以slice夾限)
+            let len = Math.max(0, Math.min(length, reader.size - index))
+
+            //u8All, 已讀至檔尾者直接取用
+            if (u8All !== null) {
+                return u8All.subarray(index, index + len)
+            }
+
+            //read, 迴圈讀滿以處理短讀, 讀到0位元組視為檔尾
+            let u8 = new Uint8Array(len)
+            let n = 0
+            while (n < len) {
+                let { bytesRead } = await fh.read(u8, n, len - n, index + n)
+                if (bytesRead === 0) {
+                    break
+                }
+                n += bytesRead
+            }
+
+            return n < len ? u8.subarray(0, n) : u8
+        }
+
+        //close, 重複呼叫時僅關閉一次
+        let close = async () => {
+            if (fh !== null) {
+                let h = fh
+                fh = null
+                await h.close()
+            }
+        }
+
+        return { reader, close }
+    }
+
+
+    //addFile, 將檔案fp以name為項目名加入zipWriter, 依序分段讀入而不整檔載入記憶體, 結束時(含失敗)關閉檔案代號, 加入失敗時回傳原始錯誤而不被關閉錯誤取代
+    async function addFile(zipWriter, name, fp) {
+        let fr = createFileReader(fp, true)
+        let err = null
+        try {
+            await zipWriter.add(name, fr.reader)
+        }
+        catch (e) {
+            err = e
+        }
+        try {
+            await fr.close()
+        }
+        catch (e) {
+            if (err === null) {
+                err = e
+            }
+        }
+        if (err !== null) {
+            throw err
+        }
+    }
+
+
+    //writeZip, 於fpOut以串流寫出壓縮檔, 由fun(zipWriter)加入項目, 壓縮後資料隨即寫入檔案而不整包組於記憶體, 結束時(含失敗)關閉檔案代號
+    async function writeZip(fpOut, level, pw, fun) {
+
+        //zipOpt
+        let zipOpt = { level }
+        if (pw !== '') {
+            zipOpt.password = pw
+            zipOpt.zipCrypto = true //使用ZipCrypto(即zip20)加密維持與舊版相同相容性, 若需更強加密可改為encryptionStrength: 3(AES-256)
+        }
+
+        //fdTemp, 登記進行中之暫存資料夾, 結束時(含失敗)移除
+        let fdTemp = path.dirname(fpOut)
+        activeTemps.add(fdTemp)
+
+        //stream, closed於檔案代號關閉(含寫出失敗)後resolve
+        let stream = fs.createWriteStream(fpOut)
+        let closed = new Promise((resolve) => {
+            stream.once('close', resolve)
+        })
+
+        try {
+
+            //zipWriter
+            let zipWriter = new ZipWriter(Writable.toWeb(stream), zipOpt)
+
+            //add
+            await fun(zipWriter)
+
+            //close, 寫出中央目錄並結束寫入串流
+            await zipWriter.close()
+
+        }
+        catch (err) {
+
+            //destroy, 失敗時中止寫入串流以關閉檔案代號
+            stream.destroy()
+
+            throw err
+        }
+        finally {
+
+            //closed, 確認寫入串流之檔案代號已關閉才返回, 使replaceTarget改名與清除暫存時不再持有該代號(Windows下Node以FILE_SHARE_DELETE開檔故未關閉亦可改名, 此處仍求順序明確且不遺留代號)
+            await closed
+
+            //activeTemps
+            activeTemps.delete(fdTemp)
+
+        }
+
+    }
+
+
     //readZip, 開啟src之ZipReader交由fun處理, 結束時(含失敗)關閉ZipReader與檔案代號
     async function readZip(src, readerOpt, fun) {
 
         //reader
-        let fh = null
+        let fileReader = null
         let reader
         if (src instanceof Uint8Array) {
             reader = new Uint8ArrayReader(src)
         }
         else {
 
-            //reader, 以zip.js之Reader為基底(沿用其createReadable)補上init與readUint8Array, 依位置隨機讀取檔案, 只讀中央目錄與所需項目而不載入整檔
-            reader = new Reader()
-            reader.init = async () => {
-                fh = await fs.promises.open(src, 'r')
-                reader.size = (await fh.stat()).size
-                reader.initialized = true
-            }
-            reader.readUint8Array = async (index, length) => {
-
-                //len, 依檔案實際大小夾限, 避免依異常之宣告長度配置過大緩衝區(同Uint8ArrayReader以slice夾限)
-                let len = Math.max(0, Math.min(length, reader.size - index))
-
-                //read, 迴圈讀滿以處理短讀, 讀到0位元組視為檔尾
-                let u8 = new Uint8Array(len)
-                let n = 0
-                while (n < len) {
-                    let { bytesRead } = await fh.read(u8, n, len - n, index + n)
-                    if (bytesRead === 0) {
-                        break
-                    }
-                    n += bytesRead
-                }
-
-                return n < len ? u8.subarray(0, n) : u8
-            }
+            //reader, 依位置隨機讀取檔案, 只讀中央目錄與所需項目而不載入整檔
+            fileReader = createFileReader(src)
+            reader = fileReader.reader
 
         }
 
@@ -457,8 +545,8 @@ function mZip() {
                 await zipReader.close()
             }
             finally {
-                if (fh !== null) {
-                    await fh.close()
+                if (fileReader !== null) {
+                    await fileReader.close()
                 }
             }
         }
