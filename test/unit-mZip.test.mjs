@@ -377,6 +377,24 @@ describe('mZip', function() {
             assert.match(errMsg(await getRejection(wz.mZip.zipFolder(fdSrc, `${fdTmp}/zd09.zip`, { level: 10 }))), /Invalid level/)
         })
 
+        //規格: JSDoc「壓縮資料夾」含全部子資料夾與檔案(不論層數); 列舉來源之層數不得受限(wsemi之fsTreeFolder之levelLimit為null時僅列第1層, 須給大有限值才為無窮遍歷)
+        it('ZD10 多層子資料夾內之檔案與資料夾皆進入壓縮檔(不受列舉層數限制)', async function() {
+            let fdDeep = `${fdTmp}/zd10Src`
+            fs.mkdirSync(`${fdDeep}/l1/l2/l3/l4/emptyL5`, { recursive: true })
+            fs.writeFileSync(`${fdDeep}/top.txt`, 'top')
+            fs.writeFileSync(`${fdDeep}/l1/f1.txt`, 'f1')
+            fs.writeFileSync(`${fdDeep}/l1/l2/f2.txt`, 'f2')
+            fs.writeFileSync(`${fdDeep}/l1/l2/l3/f3.txt`, 'f3')
+            fs.writeFileSync(`${fdDeep}/l1/l2/l3/l4/f4.txt`, 'f4')
+            let fp = `${fdTmp}/zd10.zip`
+            await wz.mZip.zipFolder(fdDeep, fp)
+            let names = (await wz.mZip.listEntries(fp)).map((v) => v.filename).sort()
+            let expected = ['zd10Src/', 'zd10Src/top.txt', 'zd10Src/l1/', 'zd10Src/l1/f1.txt', 'zd10Src/l1/l2/', 'zd10Src/l1/l2/f2.txt', 'zd10Src/l1/l2/l3/', 'zd10Src/l1/l2/l3/f3.txt', 'zd10Src/l1/l2/l3/l4/', 'zd10Src/l1/l2/l3/l4/f4.txt', 'zd10Src/l1/l2/l3/l4/emptyL5/'].sort()
+            assert.strict.deepEqual(names, expected)
+            await wz.mZip.unzip(fp, `${fdTmp}/zd10Out`)
+            assertSameTree(fdDeep, `${fdTmp}/zd10Out/zd10Src`)
+        })
+
     })
 
     describe('unzip', function() {

@@ -251,7 +251,7 @@ function mZip() {
                 //items, 遞迴列舉資料夾下全部檔案與子資料夾, 目標位於來源資料夾內時排除暫存資料夾與既有目標(與先刪除目標再壓縮之結果相同)
                 let fdTemp = path.dirname(fpOut)
                 let fpTarAbs = path.resolve(fpTar)
-                let items = fsTreeFolder(fpSrc, null).filter((item) => {
+                let items = fsTreeFolder(fpSrc, 4294967295).filter((item) => {
                     let p = path.resolve(item.path)
                     return p !== fpTarAbs && !isSameOrInside(p, fdTemp)
                 })
