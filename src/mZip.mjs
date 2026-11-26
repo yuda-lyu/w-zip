@@ -231,9 +231,9 @@ function mZip() {
                     //root, 根目錄亦如子資料夾以目錄項保留(同7z), 來源為空資料夾時解壓後仍有根資料夾
                     await zipWriter.add(bn, undefined, { directory: true })
 
-                    //items, 遞迴列舉資料夾下全部檔案與子資料夾(levelLimit給大有限值4294967295表無窮遍歷, 給null時新版wsemi僅列第1層), 目標位於來源資料夾內時排除暫存資料夾(含同行程內並發之其他壓縮之暫存資料夾)與既有目標(與先刪除目標再壓縮之結果相同)
+                    //items, 遞迴列舉資料夾下全部檔案與子資料夾(不給opt.levelLimit即窮舉全部層級, 給levelLimit則只列至該層), 目標位於來源資料夾內時排除暫存資料夾(含同行程內並發之其他壓縮之暫存資料夾)與既有目標(與先刪除目標再壓縮之結果相同)
                     let fpTarAbs = path.resolve(fpTar)
-                    let items = fsTreeFolder(fpSrc, 4294967295).filter((item) => {
+                    let items = fsTreeFolder(fpSrc).filter((item) => {
                         let p = path.resolve(item.path)
                         return p !== fpTarAbs && !Array.from(activeTemps).some((fdTemp) => isSameOrInside(p, fdTemp))
                     })

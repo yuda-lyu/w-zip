@@ -377,7 +377,7 @@ describe('mZip', function() {
             assert.match(errMsg(await getRejection(wz.mZip.zipFolder(fdSrc, `${fdTmp}/zd09.zip`, { level: 10 }))), /Invalid level/)
         })
 
-        //規格: JSDoc「壓縮資料夾」含全部子資料夾與檔案(不論層數); 列舉來源之層數不得受限(wsemi之fsTreeFolder之levelLimit為null時僅列第1層, 須給大有限值才為無窮遍歷)
+        //規格: JSDoc「壓縮資料夾」含全部子資料夾與檔案(不論層數); 列舉來源之層數不得受限(wsemi之fsTreeFolder未給opt.levelLimit才窮舉全部層級, 給levelLimit則只列至該層)
         it('ZD10 多層子資料夾內之檔案與資料夾皆進入壓縮檔(不受列舉層數限制)', async function() {
             let fdDeep = `${fdTmp}/zd10Src`
             fs.mkdirSync(`${fdDeep}/l1/l2/l3/l4/emptyL5`, { recursive: true })
